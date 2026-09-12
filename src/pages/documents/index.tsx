@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { useIndices } from '@/hooks/use-indices'
+import { listModels, type ModelConfig } from '@/api/models'
 import { Loader2, Upload } from 'lucide-react'
 import { Button } from '@/components/atoms/button'
 import { listDocuments, uploadDocument, type DocumentRecord, type EmbeddingSelection } from '@/api/documents'
@@ -14,9 +17,20 @@ const DocumentsPage = () => {
     const [message, setMessage] = useState('')
     const [file, setFile] = useState<File | null>(null)
     const [uploading, setUploading] = useState(false)
-    const [embedding, setEmbedding] = useState<EmbeddingSelection>('default')
+    const [embedding, setEmbedding] = useState<EmbeddingSelection>('')
+    const [models, setModels] = useState<ModelConfig[]>([])
+    const [modelsLoading, setModelsLoading] = useState(true)
+    const [modelsError, setModelsError] = useState('')
     const [progress, setProgress] = useState(0)
     const [refresh, setRefresh] = useState(0)
+    const [search] = useSearchParams()
+    const requestedIndex = search.get('index_id')
+    const { indices, loading: indicesLoading, error: indicesError } = useIndices(project?.id, refresh)
+    const [indexId, setIndexId] = useState('')
+    useEffect(() => {
+        setIndexId(indices.some((item) => item.id === requestedIndex) ? requestedIndex! : '')
+    }, [project?.id, requestedIndex, indices])
+    const validIndex = indices.some((item) => item.id === indexId)
     const input = useRef<HTMLInputElement>(null)
     const activeProject = useRef(project?.id)
     activeProject.current = project?.id
@@ -45,8 +59,24 @@ const DocumentsPage = () => {
         return () => controller.abort()
     }, [project?.id, refresh])
 
+    useEffect(() => {
+        const controller = new AbortController()
+        setModels([])
+        setEmbedding('')
+        setModelsError('')
+        if (!project) { setModelsLoading(false); return }
+        setModelsLoading(true)
+        listModels(project.id, controller.signal)
+            .then((items) => {
+                if (!controller.signal.aborted) { setModels(items); setEmbedding(items[0]?.id ?? '') }
+            })
+            .catch((err) => { if (!controller.signal.aborted) setModelsError(apiError(err)) })
+            .finally(() => { if (!controller.signal.aborted) setModelsLoading(false) })
+        return () => controller.abort()
+    }, [project?.id, refresh])
+
     async function upload() {
-        if (!file || !project || loading || busy.current) return
+        if (!file || !project || !embedding || !validIndex || indicesLoading || modelsLoading || loading || busy.current) return
         const projectId = project.id
         const projectName = project.name
         busy.current = true
@@ -57,7 +87,7 @@ const DocumentsPage = () => {
         try {
             const result = await uploadDocument(projectId, file, (value) => {
                 if (mounted.current) setProgress(value)
-            }, embedding)
+            }, embedding, indexId)
             if (!mounted.current) return
             if (activeProject.current === projectId) {
                 setDocuments((current) => [result, ...current.filter((item) => item.id !== result.id)])
@@ -76,29 +106,35 @@ const DocumentsPage = () => {
     return (
         <section className="space-y-6 p-3">
             <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">{project?.name ?? '프로젝트를 선택하세요'}</p>
                 <h1 className="text-2xl font-semibold">Documents</h1>
                 <p className="text-sm text-muted-foreground">문서를 업로드하면 텍스트를 추출하고 청킹·임베딩하여 저장합니다.</p>
             </div>
             <div className="space-y-4 rounded-lg border border-dashed p-6">
+                <label htmlFor="document-index" className="block text-sm font-medium">인덱스</label>
+                <select id="document-index" value={validIndex ? indexId : ''} disabled={uploading || indicesLoading} onChange={(event) => setIndexId(event.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+                    <option value="">{indicesLoading ? '인덱스를 불러오는 중…' : '인덱스를 선택하세요'}</option>
+                    {indices.map((item) => <option key={item.id} value={item.id}>{item.service_name} · {item.name}</option>)}
+                </select>
+                {indicesError && <p role="alert" className="text-sm text-destructive">{indicesError} <button type="button" className="underline" onClick={() => setRefresh((value) => value + 1)}>다시 시도</button></p>}
+                {!indicesLoading && !indices.length && <p className="text-sm text-muted-foreground">문서를 업로드하려면 인덱스가 필요합니다. <Link to="/index/new" className="underline">인덱스 생성</Link></p>}
                 <label htmlFor="embedding-model" className="block text-sm font-medium">임베딩 모델</label>
-                <select id="embedding-model" value={embedding} disabled={uploading}
+                <select id="embedding-model" value={embedding} disabled={uploading || modelsLoading}
                     onChange={(event) => setEmbedding(event.target.value as EmbeddingSelection)}
                     className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
-                    <option value="default">서버 기본 설정</option>
-                    <option value="ollama">Ollama · 서버에 설정된 로컬 모델</option>
-                    <option value="text-embedding-3-small">OpenAI · text-embedding-3-small</option>
-                    <option value="text-embedding-3-large">OpenAI · text-embedding-3-large</option>
+                    <option value="" disabled>{modelsLoading ? '모델을 불러오는 중…' : '설정에서 모델을 등록하세요'}</option>
+                    {models.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.model}</option>)}
                 </select>
-                {embedding.startsWith('text-embedding-') && <p className="text-xs text-muted-foreground">
-                    문서 텍스트를 OpenAI로 전송하여 처리합니다. 서버 API 키 설정이 필요하며 API 사용 요금이 발생합니다.
+                {modelsError && <p role="alert" className="text-sm text-destructive">{modelsError} <button type="button" className="underline" onClick={() => setRefresh((value) => value + 1)}>다시 시도</button></p>}
+                <Link to="/setting" className="inline-block text-sm underline">모델 및 API 키 설정</Link>
+                {models.find((item) => item.id === embedding)?.provider === 'openai' && <p className="text-xs text-muted-foreground">
+                    문서 텍스트를 OpenAI로 전송하여 처리하며 API 사용 요금이 발생합니다.
                 </p>}
                 <label htmlFor="document-file" className="block text-sm font-medium">업로드할 문서</label>
                 <input ref={input} id="document-file" type="file" accept=".txt,.md,.pdf"
                     disabled={!project || uploading} className="block w-full text-sm"
                     onChange={(event) => { setFile(event.target.files?.[0] ?? null); setError(''); setMessage('') }} />
-                <p className="text-xs text-muted-foreground">TXT·Markdown(UTF-8), 텍스트 PDF · 기본 최대 10MB · 스캔 PDF는 OCR 필요</p>
-                <Button onClick={upload} disabled={!project || !file || uploading || loading}>
+                <p className="text-xs text-muted-foreground">TXT·Markdown(UTF-8), 텍스트 PDF · 기본 최대 10MB · 임베딩 결과 최대 100MB · 스캔 PDF는 OCR 필요</p>
+                <Button onClick={upload} disabled={!project || !file || !embedding || !validIndex || indicesLoading || modelsLoading || uploading || loading}>
                     {uploading ? <Loader2 className="animate-spin" /> : <Upload />}
                     {uploading ? (progress < 100 ? `업로드 중 ${progress}%` : '청킹·임베딩 처리 중…') : 'Upload'}
                 </Button>
@@ -119,12 +155,13 @@ const DocumentsPage = () => {
                     documents.length === 0 ? <p className="rounded-lg border p-8 text-center text-sm text-muted-foreground">{listError ? '목록을 불러오지 못했습니다.' : '업로드된 문서가 없습니다.'}</p> :
                     <div className="overflow-x-auto rounded-lg border">
                         <table className="w-full text-left text-sm">
-                            <thead className="bg-muted"><tr><th className="p-3">문서</th><th className="p-3">크기</th><th className="p-3">청크</th><th className="p-3">상태</th><th className="p-3">업로드 일시</th></tr></thead>
+                            <thead className="bg-muted"><tr><th className="p-3">문서</th><th className="p-3">인덱스</th><th className="p-3">원본 / 임베딩 크기</th><th className="p-3">청크</th><th className="p-3">상태</th><th className="p-3">업로드 일시</th></tr></thead>
                             <tbody>{documents.map((document) => <tr key={document.id} className="border-t">
-                                <td className="max-w-xs break-all p-3">{document.filename}<p className="text-xs text-muted-foreground">{document.embedding_provider === 'openai' ? 'OpenAI' : 'Ollama'} · {document.embedding_model} · {document.embedding_dimensions}차원</p></td>
-                                <td className="whitespace-nowrap p-3">{(document.size_bytes / 1024).toFixed(1)} KB</td>
-                                <td className="p-3">{document.chunk_count}</td><td className="whitespace-nowrap p-3">완료</td>
-                                <td className="whitespace-nowrap p-3">{new Date(document.created_at).toLocaleString('ko-KR')}</td>
+                                <td className="max-w-xs break-all p-3"><Link to={`/documents/${document.id}`} className="underline">{document.filename}</Link><p className="text-xs text-muted-foreground">{document.embedding_provider === 'openai' ? 'OpenAI' : 'Ollama'} · {document.embedding_model} · {document.embedding_dimensions}차원</p></td>
+                                <td className="p-3">{document.index_id ? <Link className="underline" to={`/index/${document.index_id}`}>{indices.find((item) => item.id === document.index_id)?.name ?? '인덱스 상세'}</Link> : '미지정'}</td>
+                                <td className="whitespace-nowrap p-3">{(document.size_bytes / 1024).toFixed(1)} KB<p className="text-xs text-muted-foreground">임베딩 {(document.embedding_size_bytes / 1_000_000).toFixed(2)} MB</p></td>
+                                <td className="p-3"><Link className="underline" to={`/documents/${document.id}`}>{document.chunk_count}개 보기</Link></td><td className="whitespace-nowrap p-3">완료</td>
+                                <td className="whitespace-nowrap p-3">{new Date(document.created_at).toLocaleString('ko-KR')}<p className="text-xs text-muted-foreground">수정 {new Date(document.updated_at).toLocaleString('ko-KR')}</p></td>
                             </tr>)}</tbody>
                         </table>
                     </div>}

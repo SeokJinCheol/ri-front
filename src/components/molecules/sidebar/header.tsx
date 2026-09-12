@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import GradientIcon from '@/components/atoms/gradient-icon'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/atoms/dropdown-menu'
 import { SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from '@/components/atoms/sidebar'
+import { useAuth } from '@/providers/auth-provider'
+import { isProjectAdmin } from '@/api/projects'
 import { useProjectStore } from '@/stores/use-project-store'
 
 const Header = () => {
-    const { projects, selectedProjectId, selectProject } = useProjectStore()
+    const { projects, selectedProjectId, selectProject, loadProjects, isLoading, error } = useProjectStore()
+    const { user } = useAuth()
     const project = projects.find((item) => item.id === selectedProjectId)
     const { isMobile, setOpenMobile } = useSidebar()
     const navigate = useNavigate()
@@ -14,7 +17,7 @@ const Header = () => {
     return (
         <SidebarHeader className="border-b border-sidebar-border">
             <SidebarMenu><SidebarMenuItem>
-                <DropdownMenu>
+                <DropdownMenu onOpenChange={(open) => { if (open) void loadProjects() }}>
                     <DropdownMenuTrigger asChild>
                         <SidebarMenuButton size="lg" tooltip={project?.name ?? '프로젝트 선택'} aria-label={'프로젝트 선택: ' + (project?.name ?? '선택 없음')}>
                             <div className="icon-gradient-badge flex size-8 aspect-square shrink-0 items-center justify-center rounded-md"><FolderKanban className="size-4" /></div>
@@ -27,6 +30,8 @@ const Header = () => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-60 rounded-lg" align="start" side="right" sideOffset={8}>
                         <DropdownMenuLabel className="text-xs text-muted-foreground">프로젝트 선택</DropdownMenuLabel>
+                        {isLoading && <p role="status" className="p-3 text-sm text-muted-foreground">목록을 불러오는 중…</p>}
+                        {error && <DropdownMenuItem onSelect={(event) => { event.preventDefault(); void loadProjects() }} className="text-destructive">{error} 다시 시도</DropdownMenuItem>}
                         <DropdownMenuSeparator />
                         <DropdownMenuRadioGroup value={selectedProjectId} onValueChange={(id) => {
                             selectProject(id)
@@ -50,6 +55,7 @@ const Header = () => {
                             ))}
                         </DropdownMenuRadioGroup>
                         <DropdownMenuSeparator />
+                        {project && isProjectAdmin(project, user?.email) && <DropdownMenuItem onSelect={() => { navigate('/projects/settings'); if (isMobile) setOpenMobile(false) }}>프로젝트 설정</DropdownMenuItem>}
                         <DropdownMenuItem onSelect={() => { navigate('/projects/new'); if (isMobile) setOpenMobile(false) }}>
                             <Plus className="size-4" />프로젝트 만들기
                         </DropdownMenuItem>

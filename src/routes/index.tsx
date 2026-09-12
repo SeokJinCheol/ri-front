@@ -1,4 +1,10 @@
+import { useEffect } from 'react';
+import { Button } from '@/components/atoms/button';
 import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
+import SettingsPage from '@/pages/settings';
+import IndicesPage from '@/pages/indices';
+import ServicesPage from '@/pages/services';
+import DocumentDetail from '@/pages/documents/detail';
 import DocumentsPage from '@/pages/documents';
 import HomePage from '@/pages/home';
 import WorkspacePage from '@/pages/workspace';
@@ -7,14 +13,28 @@ import RootLayout from '@/components/templates/root-layout';
 import AuthLayout from '@/components/templates/auth-layout';
 import { useAuth } from '@/providers/auth-provider';
 import { useProjectStore } from '@/stores/use-project-store';
+import ProjectSettingsPage from '@/pages/projects/settings';
 import CreateProjectPage from '@/pages/projects/create';
 
 const RequireAuth = () => {
     const { isAuthenticated } = useAuth();
     const location = useLocation();
+    const { hasLoaded, isLoading, error, loadProjects } = useProjectStore();
+
+    useEffect(() => {
+        if (isAuthenticated) void loadProjects();
+    }, [isAuthenticated, loadProjects]);
 
     if (!isAuthenticated) {
         return <Navigate to="/login" state={{ from: location.pathname + location.search + location.hash }} replace />;
+    }
+
+    if (!hasLoaded) {
+        return <AuthLayout>
+            {error && !isLoading
+                ? <div className="space-y-4"><p role="alert">{error}</p><Button onClick={() => void loadProjects()}>다시 시도</Button></div>
+                : <p role="status">프로젝트 목록을 불러오고 있습니다…</p>}
+        </AuthLayout>;
     }
 
     return <Outlet />;
@@ -55,11 +75,13 @@ export const AppRoutes = () => {
                 <Route element={<RequireProject />}>
             <Route path="/" element={<Navigate to="/home" replace />} />
             <Route path="/home/*" element={<HomePage />} />
-            <Route path="/service" element={<WorkspacePage title="Service" description="서비스별 인덱스 모음을 관리합니다." />} />
-            <Route path="/index" element={<WorkspacePage title="Index" description="인덱스별 Document 모음을 관리합니다." />} />
+            <Route path="/service/*" element={<ServicesPage />} />
+            <Route path="/index/*" element={<IndicesPage />} />
+            <Route path="/documents/:documentId" element={<DocumentDetail />} />
             <Route path="/documents" element={<DocumentsPage />} />
             <Route path="/chat" element={<WorkspacePage title="Chat" description="프로젝트 문서를 바탕으로 대화합니다." />} />
-            <Route path="/setting" element={<WorkspacePage title="Setting" description="프로젝트 설정을 관리합니다." />} />
+            <Route path="/projects/settings" element={<ProjectSettingsPage />} />
+            <Route path="/setting" element={<SettingsPage />} />
                 <Route path="*" element={<Navigate to="/home" replace />} />
                 </Route>
             </Route>
