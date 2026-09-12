@@ -1,3 +1,4 @@
+import { Select } from '@/components/atoms/select'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, Route, Routes, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, FolderOpen, Plus, Trash2 } from 'lucide-react'
@@ -59,7 +60,7 @@ function IndexCreate({ projectId }: { projectId: string }) {
         <form onSubmit={submit} className="max-w-2xl space-y-5 rounded-xl border bg-card p-6"><fieldset disabled={saving || servicesLoading || !!servicesError} className="space-y-5">
             <div className="space-y-2"><label htmlFor="index-name" className="text-sm font-medium">이름</label><Input id="index-name" value={name} onChange={(event) => setName(event.target.value)} maxLength={80} required placeholder="예: 고객 지원 문서" /></div>
             <div className="space-y-2"><label htmlFor="index-description" className="text-sm font-medium">설명 (선택)</label><textarea id="index-description" value={description} onChange={(event) => setDescription(event.target.value)} maxLength={500} rows={4} className="w-full rounded-md border border-input bg-background p-3 text-sm" placeholder="인덱스에 담을 문서를 설명해 주세요" /></div>
-            <div className="space-y-2"><label htmlFor="index-service" className="text-sm font-medium">서비스</label><select id="index-service" value={serviceId} onChange={(event) => setServiceId(event.target.value)} required className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">서비스를 선택하세요</option>{services.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
+            <div className="space-y-2"><label htmlFor="index-service" className="text-sm font-medium">서비스</label><Select id="index-service" value={serviceId} onValueChange={(selectedValue) => setServiceId(selectedValue)} required className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">서비스를 선택하세요</option>{services.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select>
                 {!servicesLoading && !servicesError && !services.length && <p className="text-sm text-muted-foreground">관리자로 등록된 서비스가 필요합니다. <Link to="/service/new" className="underline">서비스 생성</Link></p>}</div>
             <div className="flex gap-2"><Button type="submit" disabled={!services.length}>{saving ? '저장 중…' : '인덱스 생성'}</Button><Button type="button" variant="outline" onClick={() => navigate('/index')}>취소</Button></div>
         </fieldset>{error && <p role="alert" className="text-sm text-destructive">{error}</p>}</form>

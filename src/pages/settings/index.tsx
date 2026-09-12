@@ -1,3 +1,4 @@
+import { Select } from '@/components/atoms/select'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { isProjectAdmin } from '@/api/projects'
@@ -9,6 +10,7 @@ import { apiError } from '@/lib/api'
 import { useProjectStore } from '@/stores/use-project-store'
 
 const selectClass = 'h-10 w-full rounded-md border border-input bg-background px-3 text-sm'
+const ollamaModels = ['embeddinggemma:300m-qat-q8_0', 'embeddinggemma']
 
 function ModelSettings({ projectId }: { projectId: string }) {
     const [models, setModels] = useState<ModelConfig[]>([])
@@ -22,6 +24,7 @@ function ModelSettings({ projectId }: { projectId: string }) {
     const [name, setName] = useState('')
     const [provider, setProvider] = useState<ModelConfig['provider']>('openai')
     const [model, setModel] = useState('text-embedding-3-small')
+    const [customOllama, setCustomOllama] = useState(false)
     const [apiKey, setApiKey] = useState('')
     const locked = useRef(false)
 
@@ -41,6 +44,7 @@ function ModelSettings({ projectId }: { projectId: string }) {
         setName('')
         setProvider('openai')
         setModel('text-embedding-3-small')
+        setCustomOllama(false)
         setApiKey('')
         setError('')
     }
@@ -97,19 +101,30 @@ function ModelSettings({ projectId }: { projectId: string }) {
                 <div className="space-y-2"><label htmlFor="model-name" className="text-sm font-medium">이름</label>
                     <Input id="model-name" value={name} onChange={(event) => setName(event.target.value)} maxLength={80} required placeholder="예: 문서 검색용 모델" /></div>
                 <div className="space-y-2"><label htmlFor="model-provider" className="text-sm font-medium">공급자</label>
-                    <select id="model-provider" className={selectClass} value={provider} onChange={(event) => {
-                        const value = event.target.value as ModelConfig['provider']
-                        setProvider(value); setModel(value === 'openai' ? 'text-embedding-3-small' : 'embeddinggemma'); setApiKey('')
-                    }}><option value="openai">OpenAI</option><option value="ollama">Ollama</option></select></div>
+                    <Select id="model-provider" className={selectClass} value={provider} onValueChange={(selectedValue) => {
+                        const value = selectedValue as ModelConfig['provider']
+                        setProvider(value); setModel(value === 'openai' ? 'text-embedding-3-small' : ollamaModels[0]); setCustomOllama(false); setApiKey('')
+                    }}><option value="openai">OpenAI</option><option value="ollama">Ollama</option></Select></div>
                 <div className="space-y-2"><label htmlFor="model-id" className="text-sm font-medium">임베딩 모델 ID</label>
-                    {provider === 'openai' ? <select id="model-id" className={selectClass} value={model} onChange={(event) => setModel(event.target.value)}>
+                    {provider === 'openai' ? <Select id="model-id" className={selectClass} value={model} onValueChange={(selectedValue) => setModel(selectedValue)}>
                         <option value="text-embedding-3-small">text-embedding-3-small</option>
                         <option value="text-embedding-3-large">text-embedding-3-large</option>
-                    </select> : <Input id="model-id" value={model} onChange={(event) => setModel(event.target.value)} required maxLength={100} placeholder="embeddinggemma" />}</div>
+                    </Select> : <>
+                        <Select id="model-id" className={selectClass} value={customOllama ? 'custom' : model} onValueChange={(selectedValue) => {
+                            const value = selectedValue
+                            setCustomOllama(value === 'custom')
+                            setModel(value === 'custom' ? '' : value)
+                        }}>
+                            {ollamaModels.map((id) => <option key={id} value={id}>{id}</option>)}
+                            <option value="custom">다른 모델 직접 입력</option>
+                        </Select>
+                        {customOllama && <><label htmlFor="custom-model-id" className="text-sm font-medium">Ollama 모델 ID 직접 입력</label>
+                            <Input id="custom-model-id" value={model} onChange={(event) => setModel(event.target.value)} required maxLength={100} placeholder="예: embeddinggemma:300m-qat-q8_0" /></>}
+                    </>}</div>
                 {provider === 'openai' ? <div className="space-y-2"><label htmlFor="model-api-key" className="text-sm font-medium">API 키</label>
                     <Input id="model-api-key" type="password" autoComplete="new-password" spellCheck={false} value={apiKey} onChange={(event) => setApiKey(event.target.value)} required={keyRequired} maxLength={4096} placeholder={keyRequired ? 'API 키를 입력하세요' : '변경할 때만 새 키를 입력하세요'} />
                     <p className="text-xs text-muted-foreground">API 키는 암호화해 저장합니다. 저장된 키는 다시 표시하지 않습니다.</p>
-                </div> : <p className="text-xs text-muted-foreground">실행 중인 Ollama에 설치된 임베딩 모델 ID를 입력하세요. API 키는 필요하지 않습니다.</p>}
+                </div> : <p className="text-xs text-muted-foreground">백엔드가 연결하는 Ollama에 설치된 모델을 선택하세요. 등록 후 Documents에서 사용할 수 있으며 API 키는 필요하지 않습니다.</p>}
                 <div className="flex gap-2"><Button type="submit">{busy ? '처리 중…' : editing ? '변경 저장' : '모델 등록'}</Button>
                     {editing && <Button type="button" variant="outline" onClick={reset}>취소</Button>}</div>
             </fieldset>
@@ -124,7 +139,7 @@ function ModelSettings({ projectId }: { projectId: string }) {
                 <div><p className="break-all font-medium">{item.name}</p><p className="break-all text-sm text-muted-foreground">{item.provider === 'openai' ? 'OpenAI' : 'Ollama'} · {item.model}</p>
                     <p className="text-xs text-muted-foreground">{item.has_api_key ? 'API 키 등록됨' : 'API 키 불필요'}</p></div>
                 <div className="flex gap-2"><Button variant="outline" size="sm" disabled={busy || loading} onClick={() => {
-                    setEditing(item); setName(item.name); setProvider(item.provider); setModel(item.model); setApiKey(''); setError(''); setMessage('')
+                    setEditing(item); setName(item.name); setProvider(item.provider); setModel(item.model); setCustomOllama(item.provider === 'ollama' && !ollamaModels.includes(item.model)); setApiKey(''); setError(''); setMessage('')
                 }}>수정</Button><Button variant="ghost" size="sm" disabled={busy || loading} onClick={() => void remove(item)}>삭제</Button></div>
             </div>)}
         </div>

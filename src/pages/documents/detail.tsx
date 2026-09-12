@@ -1,3 +1,4 @@
+import { Select } from '@/components/atoms/select'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Button } from '@/components/atoms/button'
@@ -42,7 +43,7 @@ function Detail({ projectId, documentId }: { projectId: string; documentId: stri
             <Button variant="outline" disabled={loading || saving} onClick={() => { setFilename(doc.filename); setIndexId(doc.index_id ?? ''); setEditing(true) }}>문서 정보 수정</Button></div>
             {editing && <form className="space-y-3 rounded-xl border p-5" onSubmit={save}><fieldset disabled={saving || indicesLoading} className="space-y-3">
                 <label htmlFor="document-name" className="block text-sm">문서 이름</label><Input id="document-name" value={filename} onChange={(event) => setFilename(event.target.value)} required maxLength={255} />
-                <label htmlFor="document-edit-index" className="block text-sm">인덱스</label><select id="document-edit-index" className="h-10 w-full rounded-md border bg-background px-3" value={indexId} onChange={(event) => setIndexId(event.target.value)}><option value="">미지정</option>{indices.map((index) => <option key={index.id} value={index.id}>{index.name}</option>)}</select>
+                <label htmlFor="document-edit-index" className="block text-sm">인덱스</label><Select id="document-edit-index" className="h-10 w-full rounded-md border bg-background px-3" value={indexId} onValueChange={(selectedValue) => setIndexId(selectedValue)}><option value="">미지정</option>{indices.map((index) => <option key={index.id} value={index.id}>{index.name}</option>)}</Select>
                 {indicesError && <p role="alert" className="text-destructive">{indicesError}</p>}
                 <div className="flex gap-2"><Button disabled={!!indicesError}>변경 저장</Button><Button type="button" variant="outline" onClick={() => setEditing(false)}>취소</Button></div>
             </fieldset></form>}
