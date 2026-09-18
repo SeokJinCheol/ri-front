@@ -56,3 +56,7 @@ export async function listChunks(projectId: string, documentId: string, offset =
 export async function updateDocument(projectId: string, documentId: string, filename: string, indexId: string) {
     return (await api.put<DocumentRecord>(`/documents/${documentId}`, { filename, index_id: indexId || null }, { params: { project_id: projectId } })).data
 }
+
+export async function deleteDocument(projectId: string, documentId: string) {
+    await api.delete(`/documents/${documentId}`, { params: { project_id: projectId } })
+}

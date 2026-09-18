@@ -3,15 +3,18 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useIndices } from '@/hooks/use-indices'
 import { listModels, type ModelConfig } from '@/api/models'
-import { AlertTriangle, FileText, FolderOpen, Loader2, Upload, X } from 'lucide-react'
+import { AlertTriangle, FileText, FolderOpen, Loader2, Trash2, Upload, X } from 'lucide-react'
 import { Button } from '@/components/atoms/button'
 import { listDocuments, uploadDocument, type DocumentRecord, type EmbeddingSelection } from '@/api/documents'
 import { apiError } from '@/lib/api'
 import { useProjectStore } from '@/stores/use-project-store'
+import { DeleteDocumentDialog } from './delete-dialog'
 
 const DocumentsPage = () => {
     const project = useProjectStore((state) => state.projects.find((item) => item.id === state.selectedProjectId))
     const [documents, setDocuments] = useState<DocumentRecord[]>([])
+    const [deleteTarget, setDeleteTarget] = useState<DocumentRecord | null>(null)
+    const [deleteMessage, setDeleteMessage] = useState('')
     const [loading, setLoading] = useState(false)
     const [listError, setListError] = useState('')
     const [error, setError] = useState('')
@@ -49,6 +52,8 @@ const DocumentsPage = () => {
     useEffect(() => {
         const controller = new AbortController()
         setDocuments([])
+        setDeleteTarget(null)
+        setDeleteMessage('')
         setListError('')
         setError('')
         setMessage('')
@@ -185,21 +190,29 @@ const DocumentsPage = () => {
                     {selectedIndex && <Button variant="ghost" size="sm" className="ml-auto" disabled={uploading} onClick={() => setIndexId('')}>전체 문서 보기</Button>}
                 </div>
                 {listError && <p role="alert" className="text-sm text-destructive">{listError}</p>}
+                {deleteMessage && <p role="status" className="text-sm text-emerald-600">{deleteMessage}</p>}
                 {loading ? <p role="status" className="text-sm text-muted-foreground">문서를 불러오는 중…</p> :
                     visibleDocuments.length === 0 ? <p className="rounded-lg border p-8 text-center text-sm text-muted-foreground">{listError ? '목록을 불러오지 못했습니다.' : selectedIndex ? '선택한 인덱스에 업로드된 문서가 없습니다.' : '업로드된 문서가 없습니다.'}</p> :
                     <div className="overflow-x-auto rounded-lg border">
                         <table className="w-full text-left text-sm">
-                            <thead className="bg-muted"><tr><th className="p-3">문서</th><th className="p-3">인덱스</th><th className="p-3">원본 / 임베딩 크기</th><th className="p-3">청크</th><th className="p-3">상태</th><th className="p-3">업로드 일시</th></tr></thead>
+                            <thead className="bg-muted"><tr><th className="p-3">문서</th><th className="p-3">인덱스</th><th className="p-3">원본 / 임베딩 크기</th><th className="p-3">청크</th><th className="p-3">상태</th><th className="p-3">업로드 일시</th><th className="p-3">관리</th></tr></thead>
                             <tbody>{visibleDocuments.map((document) => <tr key={document.id} className="border-t">
                                 <td className="max-w-xs break-all p-3"><Link to={`/documents/${document.id}`} className="underline">{document.filename}</Link><p className="text-xs text-muted-foreground">{document.embedding_provider === 'openai' ? 'OpenAI' : 'Ollama'} · {document.embedding_model} · {document.embedding_dimensions}차원</p></td>
                                 <td className="p-3">{document.index_id ? <Link className="underline" to={`/index/${document.index_id}`}>{indices.find((item) => item.id === document.index_id)?.name ?? '인덱스 상세'}</Link> : '미지정'}</td>
                                 <td className="whitespace-nowrap p-3">{(document.size_bytes / 1024).toFixed(1)} KB<p className="text-xs text-muted-foreground">임베딩 {(document.embedding_size_bytes / 1_000_000).toFixed(2)} MB</p></td>
                                 <td className="p-3"><Link className="underline" to={`/documents/${document.id}`}>{document.chunk_count}개 보기</Link></td><td className="whitespace-nowrap p-3">완료</td>
                                 <td className="whitespace-nowrap p-3">{new Date(document.created_at).toLocaleString('ko-KR')}<p className="text-xs text-muted-foreground">수정 {new Date(document.updated_at).toLocaleString('ko-KR')}</p></td>
+                                <td className="p-3"><Button variant="outline" size="sm" className="text-destructive" disabled={uploading} aria-label={`${document.filename} 삭제`} onClick={() => { setDeleteMessage(''); setDeleteTarget(document) }}><Trash2 />삭제</Button></td>
                             </tr>)}</tbody>
                         </table>
                     </div>}
             </div>
+            {deleteTarget && deleteTarget.project_id === project?.id && <DeleteDocumentDialog key={deleteTarget.id} document={deleteTarget}
+                onClose={() => setDeleteTarget(null)} onDeleted={() => {
+                    setDocuments((current) => current.filter((item) => item.id !== deleteTarget.id))
+                    setDeleteMessage(`${deleteTarget.filename} 문서를 삭제했습니다.`)
+                    setDeleteTarget(null)
+                }} />}
         </section>
     )
 }
