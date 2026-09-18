@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:nginx": "vite build --mode nginx --base=/ri-rag/",
     "preview": "vite preview",
     "electron:dev": "vite",
     "electron:build": "vite build && electron-builder"

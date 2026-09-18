@@ -4,10 +4,10 @@ import electron from 'vite-plugin-electron';
 import renderer from 'vite-plugin-electron-renderer';
 import path from 'path';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
-    electron([
+    ...(mode === 'nginx' ? [] : [electron([
       {
         entry: 'electron/main.js',
       },
@@ -18,18 +18,18 @@ export default defineConfig({
         },
       },
     ]),
-    renderer(),
+    renderer()]),
   ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    outDir: 'dist',
+  },
   server: {
     port: 5174,
     strictPort: true,
   },
-  build: {
-    outDir: 'dist',
-  },
-});
+}));
