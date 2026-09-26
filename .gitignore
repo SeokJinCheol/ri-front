@@ -26,6 +26,9 @@ release/
 .DS_Store
 Thumbs.db
 
+# Excel temporary lock files
+~$*.xlsx
+
 # Logs
 logs
 *.log
