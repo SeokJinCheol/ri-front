@@ -7,7 +7,7 @@
 - RI Vite 개발 서버: 5174 (여동: 5173)
 
 프런트엔드 폴더에서 `npm run build:nginx`로 빌드합니다. 이 모드는
-Electron 없이 `/ri-rag/` 경로로 빌드하고 `/ri-rag/api/v1`로 API를 요청합니다.
+Electron 없이 `/ri-rag/` 경로로 빌드하고 `http://true-iron.co.kr/ri-rag/api/v1/`로 API를 요청합니다.
 
 백엔드는 `ri-back` 폴더에서 실행합니다:
 
@@ -30,3 +30,13 @@ nginx -s reload -e stderr
 
 설정의 정적 파일 경로는 이 Mac의 절대 경로입니다. 다른 환경에서는 수정해야 합니다.
 백엔드 실행은 별도 관리하며 nginx가 백엔드를 시작하지 않습니다.
+
+## Swagger
+
+- 도메인: http://true-iron.co.kr/ri-rag/api/docs
+- 로컬 Nginx: http://localhost/ri-rag/api/docs
+- OpenAPI 스키마: `/ri-rag/api/openapi.json`
+
+백엔드 `/api/docs`와 `/api/openapi.json`을 기존 API 프록시로 전달합니다.
+Swagger의 상대 스키마·서버 주소를 사용하므로 Try it out도 `/ri-rag/api/v1/...`로 요청합니다.
+기존 백엔드 직접 접속 `http://127.0.0.1:8000/docs`도 유지됩니다.
