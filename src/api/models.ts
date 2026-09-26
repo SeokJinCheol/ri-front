@@ -6,6 +6,7 @@ export interface ModelConfig {
     name: string
     provider: 'openai' | 'ollama'
     model: string
+    purpose: 'embedding' | 'generation'
     has_api_key: boolean
     created_at: string
 }
@@ -13,6 +14,7 @@ export interface ModelConfig {
 export interface ModelInput {
     name: string
     provider: ModelConfig['provider']
+    purpose?: ModelConfig['purpose']
     model: string
     api_key?: string
 }
@@ -28,4 +30,8 @@ export async function saveModel(projectId: string, payload: ModelInput, id?: str
 
 export async function deleteModel(projectId: string, id: string) {
     await api.delete(`/projects/${projectId}/models/${id}`)
+}
+
+export async function testModel(projectId: string, id: string) {
+    return (await api.post<{ status: string; detail: string; elapsed_ms: number }>(`/projects/${projectId}/models/${id}/test`, {}, { timeout: 180000 })).data
 }

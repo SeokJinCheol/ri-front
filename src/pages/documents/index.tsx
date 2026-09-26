@@ -77,7 +77,7 @@ const DocumentsPage = () => {
         setModelsLoading(true)
         listModels(project.id, controller.signal)
             .then((items) => {
-                if (!controller.signal.aborted) { setModels(items); setEmbedding(items[0]?.id ?? '') }
+                if (!controller.signal.aborted) { const embeddings = items.filter((item) => item.purpose === 'embedding'); setModels(embeddings); setEmbedding(embeddings[0]?.id ?? '') }
             })
             .catch((err) => { if (!controller.signal.aborted) setModelsError(apiError(err)) })
             .finally(() => { if (!controller.signal.aborted) setModelsLoading(false) })

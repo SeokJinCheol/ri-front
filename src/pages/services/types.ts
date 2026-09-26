@@ -9,6 +9,10 @@ export interface ServiceInput {
     name: string
     description: string
     members: ServiceMember[]
+    embedding_model_id?: string | null
+    generation_model_id?: string | null
+    search_top_k?: number
+    system_prompt?: string
     index_limit?: number
 }
 

@@ -1,4 +1,7 @@
-import { useRef, useState, type FormEvent } from 'react'
+import { Select } from '@/components/atoms/select'
+import { listModels, type ModelConfig } from '@/api/models'
+import { useProjectStore } from '@/stores/use-project-store'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Trash2, ShieldCheck, Users } from 'lucide-react'
 import { Button } from '@/components/atoms/button'
 import { Input } from '@/components/atoms/input'
@@ -17,6 +20,20 @@ export default function ServiceForm({ initial, email, users, onSave, onCancel }:
     const [description, setDescription] = useState(initial?.description ?? '')
     const [members, setMembers] = useState<ServiceMember[]>(initial?.members ?? [{ email, role: 'admin' }])
     const [indexLimit, setIndexLimit] = useState(initial?.index_limit ?? 5)
+    const projectId = useProjectStore((state) => state.selectedProjectId)
+    const [models, setModels] = useState<ModelConfig[]>([])
+    const [modelError, setModelError] = useState('')
+    const [embeddingModel, setEmbeddingModel] = useState(initial?.embedding_model_id ?? '')
+    const [generationModel, setGenerationModel] = useState(initial?.generation_model_id ?? '')
+    const [topK, setTopK] = useState(initial?.search_top_k ?? 5)
+    const [prompt, setPrompt] = useState(initial?.system_prompt ?? '')
+    useEffect(() => {
+        const controller = new AbortController()
+        if (projectId) listModels(projectId, controller.signal).then(setModels).catch((err) => {
+            if (!controller.signal.aborted) setModelError(apiError(err))
+        })
+        return () => controller.abort()
+    }, [projectId])
     const [error, setError] = useState('')
     const [busy, setBusy] = useState(false)
     const locked = useRef(false)
@@ -32,7 +49,7 @@ export default function ServiceForm({ initial, email, users, onSave, onCancel }:
         locked.current = true
         setBusy(true)
         try {
-            await onSave({ name: name.trim(), description: description.trim(), members: normalized, index_limit: indexLimit })
+            await onSave({ name: name.trim(), description: description.trim(), members: normalized, index_limit: indexLimit, embedding_model_id: embeddingModel || null, generation_model_id: generationModel || null, search_top_k: topK, system_prompt: prompt.trim() })
         } catch (err) {
             setError(apiError(err))
         } finally {
@@ -52,6 +69,20 @@ export default function ServiceForm({ initial, email, users, onSave, onCancel }:
                     <p className="text-xs text-muted-foreground">기본 5개 · 서비스 관리자가 변경할 수 있습니다.</p></div>
                 <div className="space-y-2"><label htmlFor="service-description" className="text-sm font-medium">설명</label>
                     <textarea id="service-description" className="min-h-28 w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} placeholder="어떤 인덱스를 관리하는 서비스인가요?" /></div>
+            </div>
+            <div className="space-y-4 rounded-xl border bg-card p-5 sm:p-6">
+                <h2 className="font-semibold">검색 및 답변 모델</h2>
+                <p className="text-sm text-muted-foreground">설정에서 모델을 등록한 뒤 연결하세요. 검색 모델은 문서 업로드에 사용한 모델과 같아야 합니다.</p>
+                {modelError && <p role="alert" className="text-destructive">{modelError}</p>}
+                {(['embedding', 'generation'] as const).map((purpose) => <div key={purpose} className="space-y-2">
+                    <label htmlFor={`service-${purpose}`} className="text-sm font-medium">{purpose === 'embedding' ? '검색용 임베딩 모델' : '답변 생성 모델'}</label>
+                    <Select id={`service-${purpose}`} value={(purpose === 'embedding' ? embeddingModel : generationModel) || 'none'} onValueChange={(value) => (purpose === 'embedding' ? setEmbeddingModel : setGenerationModel)(value === 'none' ? '' : value)}>
+                        <option value="none">미설정</option>
+                        {models.filter((item) => item.purpose === purpose).map((item) => <option key={item.id} value={item.id}>{item.name} · {item.model}</option>)}
+                    </Select>
+                </div>)}
+                <div className="space-y-2"><label htmlFor="search-top-k" className="text-sm font-medium">검색 청크 수</label><Input id="search-top-k" type="number" min={1} max={20} required value={topK} onChange={(e) => setTopK(Number(e.target.value))} /></div>
+                <div className="space-y-2"><label htmlFor="answer-style" className="text-sm font-medium">답변 스타일 (선택)</label><textarea id="answer-style" className="min-h-24 w-full rounded-md border bg-background p-3 text-sm" maxLength={2000} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="예: 핵심을 먼저 설명하고 필요한 절차를 번호로 정리하세요." /></div>
             </div>
             <div className="space-y-5 rounded-xl border bg-card p-5 sm:p-6">
                 <div><h2 className="font-semibold">사용자 및 권한</h2><p className="mt-1 text-sm text-muted-foreground">관리자와 멤버를 각각 검색해 선택하세요.</p></div>
