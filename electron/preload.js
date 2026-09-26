@@ -1,13 +1,12 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-// Expose protected methods that allow the renderer process to use
-// the ipcRenderer without exposing the entire object
+const argument = process.argv.find((item) => item.startsWith('--real-iron-api-url='));
 contextBridge.exposeInMainWorld('api', {
   platform: process.platform,
-  setTheme: (theme) => ipcRenderer.send('theme:change', theme),
+  backendUrl: argument ? decodeURIComponent(argument.slice('--real-iron-api-url='.length)) : undefined,
   windowControls: {
     minimize: () => ipcRenderer.send('window:minimize'),
     maximize: () => ipcRenderer.send('window:maximize'),
     close: () => ipcRenderer.send('window:close'),
-  }
+  },
 });

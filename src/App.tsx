@@ -1,13 +1,15 @@
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, HashRouter } from 'react-router-dom';
 import { AppProviders } from "@/providers";
 import {AppRoutes} from "@/routes";
 
 function App() {
+  const desktop = import.meta.env.MODE === 'electron' || !!window.api;
+  const Router = desktop ? HashRouter : BrowserRouter;
   return (
       <AppProviders>
-          <BrowserRouter basename={import.meta.env.BASE_URL}>
+          <Router basename={desktop ? undefined : import.meta.env.BASE_URL}>
               <AppRoutes />
-          </BrowserRouter>
+          </Router>
       </AppProviders>
   );
 }

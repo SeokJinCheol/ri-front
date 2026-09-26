@@ -8,8 +8,16 @@
     "build": "vite build",
     "build:nginx": "vite build --mode nginx --base=/ri-rag/",
     "preview": "vite preview",
-    "electron:dev": "vite",
-    "electron:build": "vite build && electron-builder"
+    "electron:dev": "vite --mode electron",
+    "electron:build": "npm run build:electron && electron-builder --publish never",
+    "build:electron": "vite build --mode electron",
+    "electron:pack": "npm run build:electron && electron-builder --dir --publish never",
+    "electron:build:mac": "npm run build:electron && electron-builder --mac --publish never",
+    "electron:build:win": "npm run build:electron && electron-builder --win --x64 --publish never",
+    "electron:build:linux": "npm run build:electron && electron-builder --linux --publish never",
+    "test:electron-config": "node --test electron/backend-config.test.cjs",
+    "dev:local": "vite --mode local-test",
+    "test:api-local": "node scripts/test-api-local.cjs"
   },
   "keywords": [],
   "author": "",

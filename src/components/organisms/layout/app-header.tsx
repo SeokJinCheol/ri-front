@@ -1,6 +1,8 @@
 declare global {
     interface Window {
         api?: {
+            platform: string;
+            backendUrl?: string;
             windowControls?: {
                 minimize: () => void;
                 maximize: () => void;
