@@ -7,7 +7,7 @@ import ServicesPage from '@/pages/services';
 import DocumentDetail from '@/pages/documents/detail';
 import DocumentsPage from '@/pages/documents';
 import HomePage from '@/pages/home';
-import WorkspacePage from '@/pages/workspace';
+import ChatPage from '@/pages/chat';
 import LoginPage from '@/pages/login';
 import RootLayout from '@/components/templates/root-layout';
 import AuthLayout from '@/components/templates/auth-layout';
@@ -79,7 +79,7 @@ export const AppRoutes = () => {
             <Route path="/index/*" element={<IndicesPage />} />
             <Route path="/documents/:documentId" element={<DocumentDetail />} />
             <Route path="/documents" element={<DocumentsPage />} />
-            <Route path="/chat" element={<WorkspacePage title="Chat" description="프로젝트 문서를 바탕으로 대화합니다." />} />
+            <Route path="/chat" element={<ChatPage />} />
             <Route path="/projects/settings" element={<ProjectSettingsPage />} />
             <Route path="/setting" element={<SettingsPage />} />
                 <Route path="*" element={<Navigate to="/home" replace />} />
