@@ -23,12 +23,13 @@ function isAppPage(url) {
 }
 
 // Register once; macOS may create another window after closing the first one.
-for (const action of ['minimize', 'maximize', 'close']) {
+for (const action of ['minimize', 'maximize', 'fullscreen', 'close']) {
   ipcMain.on(`window:${action}`, (event) => {
     if (event.senderFrame !== event.sender.mainFrame || !isAppPage(event.senderFrame.url)) return;
     const window = BrowserWindow.fromWebContents(event.sender);
     if (!window) return;
     if (action === 'maximize') window.isMaximized() ? window.unmaximize() : window.maximize();
+    else if (action === 'fullscreen') window.setFullScreen(!window.isFullScreen());
     else window[action]();
   });
 }
@@ -60,7 +61,14 @@ function createWindow() {
     mainWindow.loadFile(entryFile);
   }
   mainWindow.webContents.on('before-input-event', (event, input) => {
-    if (input.key === 'F11') event.preventDefault();
+    if (input.type !== 'keyDown' || input.isAutoRepeat) return;
+    if (input.key === 'F11') {
+      event.preventDefault();
+      mainWindow.setFullScreen(!mainWindow.isFullScreen());
+    } else if (input.key === 'Escape' && mainWindow.isFullScreen()) {
+      event.preventDefault();
+      mainWindow.setFullScreen(false);
+    }
   });
 }
 

@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('api', {
   windowControls: {
     minimize: () => ipcRenderer.send('window:minimize'),
     maximize: () => ipcRenderer.send('window:maximize'),
+    toggleFullscreen: () => ipcRenderer.send('window:fullscreen'),
     close: () => ipcRenderer.send('window:close'),
   },
 });
