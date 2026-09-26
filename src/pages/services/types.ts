@@ -1,3 +1,4 @@
+import { t } from '@/i18n'
 export type ServiceRole = 'admin' | 'member'
 
 export interface ServiceMember {
@@ -30,7 +31,7 @@ export interface Service extends ServiceInput {
     indices: ServiceIndex[]
 }
 
-export const roleLabel = (role: ServiceRole) => role === 'admin' ? '관리자' : '멤버'
+export const roleLabel = (role: ServiceRole) => role === 'admin' ? t("pages.services.types.001") : t("pages.services.types.002")
 export const normalizeEmail = (email: string) => email.trim().toLowerCase()
 export const serviceRole = (service: Service, email: string) =>
     service.members.find((member) => normalizeEmail(member.email) === normalizeEmail(email))?.role

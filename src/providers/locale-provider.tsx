@@ -1,71 +1,51 @@
-import React, { createContext, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { setTranslationLocale, translateForLocale } from '@/i18n'
+import { isLocale, readLocale, type Locale, type TranslationParams } from '@/i18n/core'
 
-export type Locale = "ko" | "en";
-
-const dictionary = {
-    ko: {
-        common: {
-            confirm: "확인",
-            cancel: "취소",
-            save: "저장",
-            settings: "설정",
-        },
-    },
-    en: {
-        common: {
-            confirm: "Confirm",
-            cancel: "Cancel",
-            save: "Save",
-            settings: "Settings",
-        },
-    },
-} as const;
-
-type TranslationPath = "common.confirm" | "common.cancel" | "common.save" | "common.settings";
-
+export type { Locale } from '@/i18n/core'
 interface LocaleContextType {
-    locale: Locale;
-    setLocale: (locale: Locale) => void;
-    t: (key: TranslationPath) => string;
+    locale: Locale
+    dateLocale: string
+    setLocale: (locale: Locale) => void
+    t: (key: string, params?: TranslationParams) => string
 }
+const LocaleContext = createContext<LocaleContextType | undefined>(undefined)
 
-const LocaleContext = createContext<LocaleContextType | undefined>(undefined);
-
-export function LocaleProvider({
-                                   children,
-                                   defaultLocale = "ko",
-                                   storageKey = "app-locale",
-                               }: {
-    children: React.ReactNode;
-    defaultLocale?: Locale;
-    storageKey?: string;
+export function LocaleProvider({ children, defaultLocale = 'ko', storageKey = 'app-locale' }: {
+    children: ReactNode; defaultLocale?: Locale; storageKey?: string
 }) {
-    const [locale, setLocale] = useState<Locale>(
-        () => (localStorage.getItem(storageKey) as Locale) || defaultLocale
-    );
-
-    const changeLocale = (nextLocale: Locale) => {
-        localStorage.setItem(storageKey, nextLocale);
-        setLocale(nextLocale);
-    };
-
-    const t = (path: TranslationPath): string => {
-        const [section, key] = path.split(".") as [keyof typeof dictionary["ko"], string];
-        const targetSection = dictionary[locale]?.[section] as Record<string, string> | undefined;
-        return targetSection?.[key] || path;
-    };
-
-    return (
-        <LocaleContext.Provider value={{ locale, setLocale: changeLocale, t }}>
-            {children}
-        </LocaleContext.Provider>
-    );
+    const [locale, updateLocale] = useState<Locale>(() => {
+        let initial = defaultLocale
+        try { initial = readLocale(window.localStorage, storageKey, defaultLocale) } catch { /* Storage may be disabled. */ }
+        setTranslationLocale(initial)
+        return initial
+    })
+    const setLocale = useCallback((next: Locale) => {
+        if (!isLocale(next)) return
+        setTranslationLocale(next)
+        updateLocale(next)
+        try { localStorage.setItem(storageKey, next) } catch { /* Switching still works without storage. */ }
+    }, [storageKey])
+    useEffect(() => { document.documentElement.lang = locale }, [locale])
+    useEffect(() => {
+        const onStorage = (event: StorageEvent) => {
+            if (event.key !== storageKey && event.key !== null) return
+            const next = isLocale(event.newValue) ? event.newValue : defaultLocale
+            setTranslationLocale(next)
+            updateLocale(next)
+        }
+        window.addEventListener('storage', onStorage)
+        return () => window.removeEventListener('storage', onStorage)
+    }, [storageKey, defaultLocale])
+    const value = useMemo(() => ({
+        locale, dateLocale: locale === 'ko' ? 'ko-KR' : 'en-US', setLocale,
+        t: (key: string, params?: TranslationParams) => translateForLocale(locale, key, params),
+    }), [locale, setLocale])
+    return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
 }
 
-export const useLocale = () => {
-    const context = useContext(LocaleContext);
-    if (!context) {
-        throw new Error("useLocale must be used within a LocaleProvider");
-    }
-    return context;
-};
+export function useLocale() {
+    const context = useContext(LocaleContext)
+    if (!context) throw new Error('useLocale must be used within a LocaleProvider')
+    return context
+}

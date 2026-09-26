@@ -1,3 +1,4 @@
+import { useLocale } from '@/providers/locale-provider'
 import { useNavigate } from 'react-router-dom'
 import type { CSSProperties } from 'react'
 
@@ -19,6 +20,7 @@ declare global {
 }
 
 const AppHeader = () => {
+    const { t } = useLocale()
     const navigate = useNavigate()
     const handleHome = () => navigate('/')
     const handleRefresh = () => window.location.reload()
@@ -35,21 +37,21 @@ const AppHeader = () => {
             style={{ WebkitAppRegion: 'drag' } as DragStyle}
         >
             <div className="px-3 flex" style={{ WebkitAppRegion: 'no-drag' } as DragStyle}>
-                <button type="button" onClick={handleHome} className="titlebar-btn" aria-label="홈으로 이동" title="홈으로 이동">
+                <button type="button" onClick={handleHome} className="titlebar-btn" aria-label={t("components.organisms.layout.app-header.001")} title={t("components.organisms.layout.app-header.001")}>
                     <span aria-hidden="true" className="material-icon-thin">home</span>
                 </button>
-                <button type="button" onClick={handleRefresh} className="titlebar-btn" aria-label="새로고침" title="현재 화면 새로고침">
+                <button type="button" onClick={handleRefresh} className="titlebar-btn" aria-label={t("pages.documents.detail.010")} title={t("components.organisms.layout.app-header.002")}>
                     <span aria-hidden="true" className="material-icon-thin">refresh</span>
                 </button>
             </div>
             <div className="flex items-center h-full" style={{ WebkitAppRegion: 'no-drag' } as DragStyle}>
-                <button type="button" onClick={handleMinimize} className="titlebar-btn" aria-label="창 최소화" title="창 최소화">
+                <button type="button" onClick={handleMinimize} className="titlebar-btn" aria-label={t("components.organisms.layout.app-header.003")} title={t("components.organisms.layout.app-header.003")}>
                     <span aria-hidden="true" className="material-icon-thin">minimize</span>
                 </button>
-                <button type="button" onClick={handleFullscreen} className="titlebar-btn" aria-label="전체화면 전환" title="전체화면 전환 (F11) · 나가기 (Esc)">
+                <button type="button" onClick={handleFullscreen} className="titlebar-btn" aria-label={t("components.organisms.layout.app-header.004")} title={t("components.organisms.layout.app-header.005")}>
                     <span aria-hidden="true" className="material-icon-thin">fullscreen</span>
                 </button>
-                <button type="button" onClick={handleClose} className="titlebar-btn titlebar-btn-close" aria-label="창 닫기" title="창 닫기">
+                <button type="button" onClick={handleClose} className="titlebar-btn titlebar-btn-close" aria-label={t("components.organisms.layout.app-header.006")} title={t("components.organisms.layout.app-header.006")}>
                     <span aria-hidden="true" className="material-icon-thin">close</span>
                 </button>
             </div>

@@ -1,3 +1,4 @@
+import { t } from '@/i18n'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { listProjects, saveProject, type Project, type ProjectMember } from '@/api/projects'
@@ -42,7 +43,7 @@ export const useProjectStore = create<ProjectState>()(persist((set, get) => ({
     replaceProject: (project) => set((state) => ({ projects: state.projects.map((item) => item.id === project.id ? project : item) })),
     createProject: async (name, description, members, creator) => {
         const trimmedName = name.trim()
-        if (!trimmedName) throw new Error('프로젝트 이름을 입력하세요.')
+        if (!trimmedName) throw new Error(t("stores.use-project-store.001"))
         const project = await saveProject(trimmedName, description.trim(), members, creator)
         set((state) => ({ projects: [...state.projects, project], selectedProjectId: project.id }))
     },

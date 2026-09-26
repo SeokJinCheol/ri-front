@@ -1,3 +1,4 @@
+import { useLocale } from '@/providers/locale-provider'
 import { Select } from '@/components/atoms/select'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -11,6 +12,7 @@ import { apiError } from '@/lib/api'
 import { DeleteDocumentDialog } from './delete-dialog'
 
 function Detail({ projectId, documentId }: { projectId: string; documentId: string }) {
+    const { t, dateLocale } = useLocale()
     const [page, setPage] = useState<ChunkPage | null>(null)
     const [offset, setOffset] = useState(0)
     const [refresh, setRefresh] = useState(0)
@@ -39,25 +41,25 @@ function Detail({ projectId, documentId }: { projectId: string; documentId: stri
         catch (err) { setError(apiError(err)) } finally { setSaving(false) }
     }
     const doc = page?.document
-    return <section className="space-y-6 p-3"><Link className="text-sm underline" to="/documents">문서 목록</Link>
+    return <section className="space-y-6 p-3"><Link className="text-sm underline" to="/documents">{t("pages.documents.detail.001")}</Link>
         {error && <p role="alert" className="text-destructive">{error}</p>}
         {doc && <><div className="flex flex-wrap items-start justify-between gap-3"><div className="space-y-2"><h1 className="break-all text-2xl font-semibold">{doc.filename}</h1>
-            <p className="text-sm text-muted-foreground">청크 {doc.chunk_count}개 · 임베딩 {(doc.embedding_size_bytes / 1_000_000).toFixed(2)} / 100 MB</p>
-            <p className="text-xs text-muted-foreground">생성 {new Date(doc.created_at).toLocaleString('ko-KR')} · 수정 {new Date(doc.updated_at).toLocaleString('ko-KR')}</p></div>
-            <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={loading || saving} onClick={() => { setFilename(doc.filename); setIndexId(doc.index_id ?? ''); setEditing(true) }}>문서 정보 수정</Button>
-                <Button variant="destructive" disabled={loading || saving} onClick={() => setConfirmDelete(true)}><Trash2 />문서 삭제</Button></div></div>
+            <p className="text-sm text-muted-foreground">{t("pages.documents.detail.002", { v0: doc.chunk_count, v1: (doc.embedding_size_bytes / 1_000_000).toFixed(2) })}</p>
+            <p className="text-xs text-muted-foreground">{t("pages.documents.detail.003", { v0: new Date(doc.created_at).toLocaleString(dateLocale), v1: new Date(doc.updated_at).toLocaleString(dateLocale) })}</p></div>
+            <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={loading || saving} onClick={() => { setFilename(doc.filename); setIndexId(doc.index_id ?? ''); setEditing(true) }}>{t("pages.documents.detail.004")}</Button>
+                <Button variant="destructive" disabled={loading || saving} onClick={() => setConfirmDelete(true)}><Trash2 />{t("pages.documents.delete-dialog.001")}</Button></div></div>
             {editing && <form className="space-y-3 rounded-xl border p-5" onSubmit={save}><fieldset disabled={saving || indicesLoading} className="space-y-3">
-                <label htmlFor="document-name" className="block text-sm">문서 이름</label><Input id="document-name" value={filename} onChange={(event) => setFilename(event.target.value)} required maxLength={255} />
-                <label htmlFor="document-edit-index" className="block text-sm">인덱스</label><Select id="document-edit-index" className="h-10 w-full rounded-md border bg-background px-3" value={indexId} onValueChange={(selectedValue) => setIndexId(selectedValue)}><option value="">미지정</option>{indices.map((index) => <option key={index.id} value={index.id}>{index.name}</option>)}</Select>
+                <label htmlFor="document-name" className="block text-sm">{t("pages.documents.detail.005")}</label><Input id="document-name" value={filename} onChange={(event) => setFilename(event.target.value)} required maxLength={255} />
+                <label htmlFor="document-edit-index" className="block text-sm">{t("pages.documents.detail.006")}</label><Select id="document-edit-index" className="h-10 w-full rounded-md border bg-background px-3" value={indexId} onValueChange={(selectedValue) => setIndexId(selectedValue)}><option value="">{t("pages.documents.detail.007")}</option>{indices.map((index) => <option key={index.id} value={index.id}>{index.name}</option>)}</Select>
                 {indicesError && <p role="alert" className="text-destructive">{indicesError}</p>}
-                <div className="flex gap-2"><Button disabled={!!indicesError}>변경 저장</Button><Button type="button" variant="outline" onClick={() => setEditing(false)}>취소</Button></div>
+                <div className="flex gap-2"><Button disabled={!!indicesError}>{t("pages.documents.detail.008")}</Button><Button type="button" variant="outline" onClick={() => setEditing(false)}>{t("pages.documents.delete-dialog.004")}</Button></div>
             </fieldset></form>}
         </>}
-        <div className="flex items-center justify-between"><h2 className="font-semibold">청크 문서 목록</h2><Button variant="outline" disabled={loading || saving} onClick={() => setRefresh((value) => value + 1)}>새로고침</Button></div>
-        {loading ? <p role="status">청크를 불러오는 중…</p> : page && <>
-            <div className="space-y-3">{page.items.map((chunk) => <details key={chunk.chunk_index} className="rounded-lg border p-4"><summary className="cursor-pointer text-sm font-medium">청크 {chunk.chunk_index + 1} · 임베딩 {(chunk.embedding_size_bytes / 1024).toFixed(1)} KB · {chunk.embedding_dimensions}차원</summary><p className="mt-4 whitespace-pre-wrap break-words text-sm">{chunk.content}</p></details>)}</div>
-            {!page.items.length && <p className="text-sm text-muted-foreground">저장된 청크가 없습니다.</p>}
-            <div className="flex items-center justify-between gap-3"><Button variant="outline" disabled={offset === 0} onClick={() => setOffset((value) => Math.max(0, value - 50))}>이전</Button><span className="text-sm">{page.total ? offset + 1 : 0}–{Math.min(offset + page.items.length, page.total)} / {page.total}</span><Button variant="outline" disabled={offset + 50 >= page.total} onClick={() => setOffset((value) => value + 50)}>다음</Button></div>
+        <div className="flex items-center justify-between"><h2 className="font-semibold">{t("pages.documents.detail.009")}</h2><Button variant="outline" disabled={loading || saving} onClick={() => setRefresh((value) => value + 1)}>{t("pages.documents.detail.010")}</Button></div>
+        {loading ? <p role="status">{t("pages.documents.detail.011")}</p> : page && <>
+            <div className="space-y-3">{page.items.map((chunk) => <details key={chunk.chunk_index} className="rounded-lg border p-4"><summary className="cursor-pointer text-sm font-medium">{t("pages.documents.detail.012", { v0: chunk.chunk_index + 1, v1: (chunk.embedding_size_bytes / 1024).toFixed(1), v2: chunk.embedding_dimensions })}</summary><p className="mt-4 whitespace-pre-wrap break-words text-sm">{chunk.content}</p></details>)}</div>
+            {!page.items.length && <p className="text-sm text-muted-foreground">{t("pages.documents.detail.013")}</p>}
+            <div className="flex items-center justify-between gap-3"><Button variant="outline" disabled={offset === 0} onClick={() => setOffset((value) => Math.max(0, value - 50))}>{t("pages.documents.detail.014")}</Button><span className="text-sm">{page.total ? offset + 1 : 0}–{Math.min(offset + page.items.length, page.total)} / {page.total}</span><Button variant="outline" disabled={offset + 50 >= page.total} onClick={() => setOffset((value) => value + 50)}>{t("pages.documents.detail.015")}</Button></div>
         </>}
         {confirmDelete && doc && <DeleteDocumentDialog document={doc} onClose={() => setConfirmDelete(false)}
             onDeleted={() => navigate(doc.index_id ? `/documents?index_id=${doc.index_id}` : '/documents', { replace: true })} />}

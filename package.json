@@ -4,6 +4,7 @@
   "description": "Real Iron - React + Electron App",
   "main": "dist-electron/main.js",
   "scripts": {
+    "test:i18n": "node --test scripts/i18n.test.mjs",
     "dev": "vite",
     "build": "vite build",
     "build:nginx": "vite build --mode nginx --base=/ri-rag/",
@@ -49,6 +50,7 @@
     "electron": "^44.2.0",
     "electron-builder": "^26.15.3",
     "postcss": "^8.5.28",
+    "read-excel-file": "9.3.10",
     "sass": "^1.104.0",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.3",

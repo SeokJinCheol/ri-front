@@ -1,3 +1,4 @@
+import { useLocale } from '@/providers/locale-provider'
 import { Select } from '@/components/atoms/select'
 import { listModels, type ModelConfig } from '@/api/models'
 import { useProjectStore } from '@/stores/use-project-store'
@@ -16,6 +17,7 @@ export default function ServiceForm({ initial, email, users, onSave, onCancel }:
     onSave: (input: ServiceInput) => Promise<void>
     onCancel: () => void
 }) {
+    const { t } = useLocale()
     const [name, setName] = useState(initial?.name ?? '')
     const [description, setDescription] = useState(initial?.description ?? '')
     const [members, setMembers] = useState<ServiceMember[]>(initial?.members ?? [{ email, role: 'admin' }])
@@ -43,9 +45,9 @@ export default function ServiceForm({ initial, email, users, onSave, onCancel }:
         if (locked.current) return
         setError('')
         const normalized = members.map((member) => ({ ...member, email: normalizeEmail(member.email) }))
-        if (!name.trim()) return setError('서비스 이름을 입력하세요.')
-        if (new Set(normalized.map((member) => member.email)).size !== normalized.length) return setError('동일한 사용자를 중복 등록할 수 없습니다.')
-        if (!normalized.some((member) => member.role === 'admin')) return setError('관리자를 한 명 이상 등록하세요.')
+        if (!name.trim()) return setError(t("pages.services.form.001"))
+        if (new Set(normalized.map((member) => member.email)).size !== normalized.length) return setError(t("stores.use-service-store.004"))
+        if (!normalized.some((member) => member.role === 'admin')) return setError(t("stores.use-service-store.005"))
         locked.current = true
         setBusy(true)
         try {
@@ -61,37 +63,37 @@ export default function ServiceForm({ initial, email, users, onSave, onCancel }:
     return <form onSubmit={submit} className="max-w-3xl space-y-6">
         <fieldset disabled={busy} className="space-y-6">
             <div className="space-y-5 rounded-xl border bg-card p-5 sm:p-6">
-                <div><h2 className="font-semibold">기본 정보</h2><p className="mt-1 text-sm text-muted-foreground">서비스의 이름과 용도를 입력하세요.</p></div>
-                <div className="space-y-2"><label htmlFor="service-name" className="text-sm font-medium">서비스 이름 <span className="text-destructive">*</span></label>
-                    <Input id="service-name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={80} placeholder="예: 고객 지원" /></div>
-                <div className="space-y-2"><label htmlFor="service-index-limit" className="text-sm font-medium">인덱스 최대 개수</label>
+                <div><h2 className="font-semibold">{t("pages.projects.settings.004")}</h2><p className="mt-1 text-sm text-muted-foreground">{t("pages.services.form.002")}</p></div>
+                <div className="space-y-2"><label htmlFor="service-name" className="text-sm font-medium">{t("pages.services.form.003")}<span className="text-destructive">*</span></label>
+                    <Input id="service-name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={80} placeholder={t("pages.services.form.004")} /></div>
+                <div className="space-y-2"><label htmlFor="service-index-limit" className="text-sm font-medium">{t("pages.services.form.005")}</label>
                     <Input id="service-index-limit" type="number" min={1} max={10000} step={1} required value={indexLimit} onChange={(event) => setIndexLimit(Number(event.target.value))} />
-                    <p className="text-xs text-muted-foreground">기본 5개 · 서비스 관리자가 변경할 수 있습니다.</p></div>
-                <div className="space-y-2"><label htmlFor="service-description" className="text-sm font-medium">설명</label>
-                    <textarea id="service-description" className="min-h-28 w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} placeholder="어떤 인덱스를 관리하는 서비스인가요?" /></div>
+                    <p className="text-xs text-muted-foreground">{t("pages.services.form.006")}</p></div>
+                <div className="space-y-2"><label htmlFor="service-description" className="text-sm font-medium">{t("pages.indices.index.020")}</label>
+                    <textarea id="service-description" className="min-h-28 w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} placeholder={t("pages.services.form.007")} /></div>
             </div>
             <div className="space-y-4 rounded-xl border bg-card p-5 sm:p-6">
-                <h2 className="font-semibold">검색 및 답변 모델</h2>
-                <p className="text-sm text-muted-foreground">설정에서 모델을 등록한 뒤 연결하세요. 검색 모델은 문서 업로드에 사용한 모델과 같아야 합니다.</p>
+                <h2 className="font-semibold">{t("pages.services.form.008")}</h2>
+                <p className="text-sm text-muted-foreground">{t("pages.services.form.009")}</p>
                 {modelError && <p role="alert" className="text-destructive">{modelError}</p>}
                 {(['embedding', 'generation'] as const).map((purpose) => <div key={purpose} className="space-y-2">
-                    <label htmlFor={`service-${purpose}`} className="text-sm font-medium">{purpose === 'embedding' ? '검색용 임베딩 모델' : '답변 생성 모델'}</label>
+                    <label htmlFor={`service-${purpose}`} className="text-sm font-medium">{purpose === 'embedding' ? t("pages.services.form.010") : t("pages.services.form.011")}</label>
                     <Select id={`service-${purpose}`} value={(purpose === 'embedding' ? embeddingModel : generationModel) || 'none'} onValueChange={(value) => (purpose === 'embedding' ? setEmbeddingModel : setGenerationModel)(value === 'none' ? '' : value)}>
-                        <option value="none">미설정</option>
+                        <option value="none">{t("pages.services.form.012")}</option>
                         {models.filter((item) => item.purpose === purpose).map((item) => <option key={item.id} value={item.id}>{item.name} · {item.model}</option>)}
                     </Select>
                 </div>)}
-                <div className="space-y-2"><label htmlFor="search-top-k" className="text-sm font-medium">검색 청크 수</label><Input id="search-top-k" type="number" min={1} max={20} required value={topK} onChange={(e) => setTopK(Number(e.target.value))} /></div>
-                <div className="space-y-2"><label htmlFor="answer-style" className="text-sm font-medium">답변 스타일 (선택)</label><textarea id="answer-style" className="min-h-24 w-full rounded-md border bg-background p-3 text-sm" maxLength={2000} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="예: 핵심을 먼저 설명하고 필요한 절차를 번호로 정리하세요." /></div>
+                <div className="space-y-2"><label htmlFor="search-top-k" className="text-sm font-medium">{t("pages.services.form.013")}</label><Input id="search-top-k" type="number" min={1} max={20} required value={topK} onChange={(e) => setTopK(Number(e.target.value))} /></div>
+                <div className="space-y-2"><label htmlFor="answer-style" className="text-sm font-medium">{t("pages.services.form.014")}</label><textarea id="answer-style" className="min-h-24 w-full rounded-md border bg-background p-3 text-sm" maxLength={2000} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder={t("pages.services.form.015")} /></div>
             </div>
             <div className="space-y-5 rounded-xl border bg-card p-5 sm:p-6">
-                <div><h2 className="font-semibold">사용자 및 권한</h2><p className="mt-1 text-sm text-muted-foreground">관리자와 멤버를 각각 검색해 선택하세요.</p></div>
+                <div><h2 className="font-semibold">{t("pages.services.form.016")}</h2><p className="mt-1 text-sm text-muted-foreground">{t("pages.services.form.017")}</p></div>
                 <div className="grid gap-4 sm:grid-cols-2">{(['admin', 'member'] as ServiceRole[]).map((role) => {
                     const assigned = members.filter((member) => member.role === role)
                     const Icon = role === 'admin' ? ShieldCheck : Users
                     return <section key={role} className="min-w-0 rounded-lg border p-4" aria-labelledby={`service-${role}-title`}>
-                        <div className="mb-4 space-y-3"><div className="flex items-center gap-2"><Icon className="size-4 text-muted-foreground" /><h3 id={`service-${role}-title`} className="font-medium">{roleLabel(role)}</h3><span className="rounded-full bg-muted px-2 py-0.5 text-xs">{assigned.length}명</span></div>
-                            <p className="text-xs text-muted-foreground">{role === 'admin' ? '생성 · 조회 · 수정 · 삭제' : '조회만 가능'}</p>
+                        <div className="mb-4 space-y-3"><div className="flex items-center gap-2"><Icon className="size-4 text-muted-foreground" /><h3 id={`service-${role}-title`} className="font-medium">{roleLabel(role)}</h3><span className="rounded-full bg-muted px-2 py-0.5 text-xs">{t("pages.services.form.018", { v0: assigned.length })}</span></div>
+                            <p className="text-xs text-muted-foreground">{role === 'admin' ? t("pages.services.form.019") : t("pages.services.form.020")}</p>
                             <UserPicker role={role} users={users} members={members} onAdd={(emails) => {
                                 setMembers((current) => [...current, ...emails.filter((value) => !current.some((member) => normalizeEmail(member.email) === value)).map((value) => ({ email: value, role }))])
                                 setError('')
@@ -101,15 +103,15 @@ export default function ServiceForm({ initial, email, users, onSave, onCancel }:
                             const creator = !initial && normalizeEmail(member.email) === normalizeEmail(email)
                             const required = creator || (role === 'admin' && assigned.length === 1)
                             const user = users.find((item) => normalizeEmail(item.email) === normalizeEmail(member.email))
-                            return <div key={member.email} className="flex items-center gap-2 rounded-md bg-muted/50 p-2.5"><div className="min-w-0 flex-1">{user?.name && <p className="text-sm font-medium">{user.name}</p>}<p className="break-all text-sm">{member.email}</p>{creator && <p className="mt-1 text-xs text-muted-foreground">생성자 · 필수 관리자</p>}</div>
-                                <Button type="button" variant="ghost" size="icon" className="shrink-0" disabled={required} title={required ? '관리자는 최소 한 명이 필요하며 생성자는 관리자여야 합니다.' : '선택 해제'} aria-label={`${member.email} ${roleLabel(role)} 선택 해제`} onClick={() => setMembers((current) => current.filter((item) => item.email !== member.email))}><Trash2 /></Button></div>
+                            return <div key={member.email} className="flex items-center gap-2 rounded-md bg-muted/50 p-2.5"><div className="min-w-0 flex-1">{user?.name && <p className="text-sm font-medium">{user.name}</p>}<p className="break-all text-sm">{member.email}</p>{creator && <p className="mt-1 text-xs text-muted-foreground">{t("pages.services.form.021")}</p>}</div>
+                                <Button type="button" variant="ghost" size="icon" className="shrink-0" disabled={required} title={required ? t("pages.services.form.022") : t("pages.services.form.023")} aria-label={t("pages.services.form.024", { v0: member.email, v1: roleLabel(role) })} onClick={() => setMembers((current) => current.filter((item) => item.email !== member.email))}><Trash2 /></Button></div>
                         })}</div>
-                        {!assigned.length && <p className="rounded-md border border-dashed px-3 py-6 text-center text-xs text-muted-foreground">선택된 {roleLabel(role)}가 없습니다.</p>}
+                        {!assigned.length && <p className="rounded-md border border-dashed px-3 py-6 text-center text-xs text-muted-foreground">{t("pages.services.form.025", { v0: roleLabel(role) })}</p>}
                     </section>
                 })}</div>
-                <p className="text-xs text-muted-foreground">한 사용자는 하나의 역할만 가질 수 있습니다. 역할을 바꾸려면 기존 선택을 해제한 후 다시 추가하세요.</p>
+                <p className="text-xs text-muted-foreground">{t("pages.services.form.026")}</p>
             </div>
-            <div className="flex justify-end gap-2"><Button type="button" variant="outline" onClick={onCancel}>취소</Button><Button type="submit">{busy ? '저장 중…' : initial ? '변경 저장' : '서비스 생성'}</Button></div>
+            <div className="flex justify-end gap-2"><Button type="button" variant="outline" onClick={onCancel}>{t("pages.documents.delete-dialog.004")}</Button><Button type="submit">{busy ? t("pages.indices.index.014") : initial ? t("pages.documents.detail.008") : t("pages.home.dashboard.006")}</Button></div>
         </fieldset>
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     </form>

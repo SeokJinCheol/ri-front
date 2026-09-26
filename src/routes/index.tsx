@@ -1,3 +1,4 @@
+import { useLocale } from '@/providers/locale-provider'
 import { useEffect } from 'react';
 import { Button } from '@/components/atoms/button';
 import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
@@ -17,6 +18,7 @@ import ProjectSettingsPage from '@/pages/projects/settings';
 import CreateProjectPage from '@/pages/projects/create';
 
 const RequireAuth = () => {
+    const { t } = useLocale()
     const { isAuthenticated } = useAuth();
     const location = useLocation();
     const { hasLoaded, isLoading, error, loadProjects } = useProjectStore();
@@ -32,8 +34,8 @@ const RequireAuth = () => {
     if (!hasLoaded) {
         return <AuthLayout>
             {error && !isLoading
-                ? <div className="space-y-4"><p role="alert">{error}</p><Button onClick={() => void loadProjects()}>다시 시도</Button></div>
-                : <p role="status">프로젝트 목록을 불러오고 있습니다…</p>}
+                ? <div className="space-y-4"><p role="alert">{error}</p><Button onClick={() => void loadProjects()}>{t("routes.index.001")}</Button></div>
+                : <p role="status">{t("routes.index.002")}</p>}
         </AuthLayout>;
     }
 
@@ -61,10 +63,11 @@ const LoginRoute = () => {
 };
 
 export const AppRoutes = () => {
+    const { t } = useLocale()
     const { isLoading } = useAuth();
 
     if (isLoading) {
-        return <AuthLayout><p role="status" className="text-sm text-muted-foreground">로그인 정보를 확인하고 있습니다…</p></AuthLayout>;
+        return <AuthLayout><p role="status" className="text-sm text-muted-foreground">{t("routes.index.003")}</p></AuthLayout>;
     }
 
     return (

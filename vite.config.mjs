@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react';
 import electron from 'vite-plugin-electron';
 import renderer from 'vite-plugin-electron-renderer';
 import path from 'path';
+import { translationsPlugin } from './scripts/i18n-workbook.mjs';
 
 export default defineConfig(({ mode }) => {
   if (mode === 'electron') {
@@ -13,6 +14,7 @@ export default defineConfig(({ mode }) => {
   return ({
   base: mode === 'electron' ? './' : '/',
   plugins: [
+    translationsPlugin(),
     react(),
     ...(['nginx', 'local-test'].includes(mode) ? [] : [electron([
       {

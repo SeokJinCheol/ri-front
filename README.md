@@ -2,6 +2,10 @@
 
 React 화면을 웹 또는 설치형 Electron 앱으로 빌드합니다. Electron 설치 파일에는 화면과 Electron 런타임이 포함되며, FastAPI 백엔드·Python·Ollama·DB는 포함하지 않습니다. 설치 앱은 설정한 백엔드에 HTTP API로 연결합니다.
 
+## 한국어·영어 전환
+
+다크 모드 버튼 옆의 번역 아이콘으로 한국어와 영어를 전환합니다. 번역 원본은 `translations/translations.xlsx`이며, 개발 서버와 빌드가 이 파일을 읽어 적용합니다. 편집 방법과 배포 반영 절차는 [번역 관리 안내](translations/README.md)를 참고하세요.
+
 ## 개발 실행
 
 ```bash

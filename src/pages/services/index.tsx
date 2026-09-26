@@ -1,3 +1,4 @@
+import { useLocale } from '@/providers/locale-provider'
 import { useRef, useState } from 'react'
 import { Link, Route, Routes, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Pencil, Trash2, FolderOpen } from 'lucide-react'
@@ -24,6 +25,7 @@ export function useServices() {
 }
 
 function ServiceEditor({ projectId, email, services, creating = false }: { projectId: string; email: string; services: Service[]; creating?: boolean }) {
+    const { t } = useLocale()
     const { user } = useAuth()
     const { serviceId } = useParams()
     const navigate = useNavigate()
@@ -42,17 +44,22 @@ function ServiceEditor({ projectId, email, services, creating = false }: { proje
     directory.set(normalizeEmail(email), { email: normalizeEmail(email), name: user?.name })
     const users = [...directory.values()].sort((a, b) => (a.name ?? a.email).localeCompare(b.name ?? b.email, 'ko'))
     if (!creating && (!service || serviceRole(service, email) !== 'admin')) return <Unavailable />
-    return <div className="space-y-6"><Back /><div><h1 className="text-2xl font-semibold">{creating ? '서비스 생성' : '서비스 수정'}</h1><p className="mt-2 text-sm text-muted-foreground">기본 정보와 서비스에 접근할 사용자를 설정하세요.</p></div>
+    return <div className="space-y-6"><Back /><div><h1 className="text-2xl font-semibold">{creating ? t("pages.home.dashboard.006") : t("pages.chat.index.018")}</h1><p className="mt-2 text-sm text-muted-foreground">{t("pages.services.index.001")}</p></div>
         <ServiceForm key={serviceId ?? 'new'} initial={creating ? undefined : service} email={email} users={users} onCancel={() => navigate(creating ? '/service' : `/service/${serviceId}`)} onSave={async (input) => {
             const saved = await save(projectId, email, input, creating ? undefined : serviceId)
             navigate(serviceRole(saved, email) ? `/service/${saved.id}` : '/service')
         }} /></div>
 }
 
-function Back() { return <Link to="/service" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />서비스 목록</Link> }
-function Unavailable() { return <div className="space-y-4"><Back /><p role="alert">서비스가 없거나 접근 권한이 없습니다.</p></div> }
+function Back() {
+    const { t } = useLocale()
+    return <Link to="/service" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />{t("pages.services.index.002")}</Link> }
+function Unavailable() {
+    const { t } = useLocale()
+    return <div className="space-y-4"><Back /><p role="alert">{t("pages.services.index.003")}</p></div> }
 
 function ServiceDetail({ services, email, projectId }: { services: Service[]; email: string; projectId: string }) {
+    const { t, dateLocale } = useLocale()
     const { serviceId } = useParams()
     const service = services.find((item) => item.id === serviceId)
     const navigate = useNavigate()
@@ -62,30 +69,31 @@ function ServiceDetail({ services, email, projectId }: { services: Service[]; em
     const deletingRef = useRef(false)
     if (!service) return <Unavailable />
     const admin = serviceRole(service, email) === 'admin'
-    return <div className="space-y-6"><Back /><div className="flex flex-wrap items-start justify-between gap-4"><div className="min-w-0"><div className="mb-2 text-sm text-muted-foreground">서비스 상세 · {roleLabel(serviceRole(service, email)!)}</div><h1 className="break-all text-2xl font-semibold">{service.name}</h1><p className="mt-2 max-w-2xl whitespace-pre-wrap break-words text-sm text-muted-foreground">{service.description || '등록된 설명이 없습니다.'}</p></div>
-        {admin && <div className="flex gap-2"><Button asChild variant="outline"><Link to={`/service/${service.id}/edit`}><Pencil />수정</Link></Button><Button variant="destructive" disabled={deleting} onClick={async () => {
+    return <div className="space-y-6"><Back /><div className="flex flex-wrap items-start justify-between gap-4"><div className="min-w-0"><div className="mb-2 text-sm text-muted-foreground">{t("pages.services.index.004", { v0: roleLabel(serviceRole(service, email)!) })}</div><h1 className="break-all text-2xl font-semibold">{service.name}</h1><p className="mt-2 max-w-2xl whitespace-pre-wrap break-words text-sm text-muted-foreground">{service.description || t("pages.indices.index.005")}</p></div>
+        {admin && <div className="flex gap-2"><Button asChild variant="outline"><Link to={`/service/${service.id}/edit`}><Pencil />{t("pages.indices.index.018")}</Link></Button><Button variant="destructive" disabled={deleting} onClick={async () => {
             if (deletingRef.current) return
-            if (!window.confirm(`“${service.name}” 서비스를 삭제할까요? 서비스 사용자 등록이 삭제됩니다. 인덱스와 문서는 인덱스 페이지에서 계속 확인할 수 있습니다.`)) return
+            if (!window.confirm(t("pages.services.index.005", { v0: service.name }))) return
             deletingRef.current = true; setDeleting(true); setError('')
             try { await remove(projectId, email, service.id); navigate('/service') } catch (err) { setError(apiError(err)) }
             finally { deletingRef.current = false; setDeleting(false) }
-        }}><Trash2 />{deleting ? '삭제 중…' : '삭제'}</Button></div>}</div>
+        }}><Trash2 />{deleting ? t("pages.documents.delete-dialog.005") : t("pages.documents.delete-dialog.006")}</Button></div>}</div>
         {error && <p role="alert" className="text-destructive">{error}</p>}
         <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-            <div className="rounded-xl border bg-card p-5"><div className="flex items-center justify-between gap-3"><h2 className="font-semibold">하위 인덱스 <span className="ml-2 text-muted-foreground">{service.indices.length} / {service.index_limit ?? 5}</span></h2>{admin && <Button asChild size="sm" variant="outline"><Link to={`/index/new?service_id=${service.id}`}>인덱스 생성</Link></Button>}</div>
-                {service.indices.length ? <div className="mt-4 divide-y">{service.indices.map((index) => <Link to={`/index/${index.id}`} key={index.id} className="block py-4 hover:underline"><p className="break-all font-medium">{index.name}</p><p className="mt-1 break-words text-sm text-muted-foreground">{index.description}</p></Link>)}</div> : <div className="py-14 text-center text-muted-foreground"><FolderOpen className="mx-auto mb-3 size-8" /><p className="text-sm">등록된 인덱스가 없습니다.</p></div>}
+            <div className="rounded-xl border bg-card p-5"><div className="flex items-center justify-between gap-3"><h2 className="font-semibold">{t("pages.home.dashboard.002")}<span className="ml-2 text-muted-foreground">{service.indices.length} / {service.index_limit ?? 5}</span></h2>{admin && <Button asChild size="sm" variant="outline"><Link to={`/index/new?service_id=${service.id}`}>{t("pages.documents.index.006")}</Link></Button>}</div>
+                {service.indices.length ? <div className="mt-4 divide-y">{service.indices.map((index) => <Link to={`/index/${index.id}`} key={index.id} className="block py-4 hover:underline"><p className="break-all font-medium">{index.name}</p><p className="mt-1 break-words text-sm text-muted-foreground">{index.description}</p></Link>)}</div> : <div className="py-14 text-center text-muted-foreground"><FolderOpen className="mx-auto mb-3 size-8" /><p className="text-sm">{t("pages.indices.index.003")}</p></div>}
             </div>
-            <div className="space-y-6"><div className="rounded-xl border bg-card p-5"><h2 className="font-semibold">등록 사용자 <span className="ml-2 text-muted-foreground">{service.members.length}</span></h2><div className="mt-4 space-y-4">{service.members.map((member) => <div key={member.email} className="flex items-center justify-between gap-3"><span className="min-w-0 break-all text-sm">{member.email}{member.email === email && <span className="ml-1 text-muted-foreground">(나)</span>}</span><span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs">{roleLabel(member.role)}</span></div>)}</div></div>
-            <dl className="space-y-3 rounded-xl border bg-card p-5 text-sm"><div className="flex flex-wrap justify-between gap-2"><dt className="text-muted-foreground">생성일</dt><dd>{new Date(service.created_at).toLocaleString('ko-KR')}</dd></div><div className="flex flex-wrap justify-between gap-2"><dt className="text-muted-foreground">최근 수정</dt><dd>{new Date(service.updated_at).toLocaleString('ko-KR')}</dd></div></dl></div>
+            <div className="space-y-6"><div className="rounded-xl border bg-card p-5"><h2 className="font-semibold">{t("pages.services.index.006")}<span className="ml-2 text-muted-foreground">{service.members.length}</span></h2><div className="mt-4 space-y-4">{service.members.map((member) => <div key={member.email} className="flex items-center justify-between gap-3"><span className="min-w-0 break-all text-sm">{member.email}{member.email === email && <span className="ml-1 text-muted-foreground">{t("pages.services.index.007")}</span>}</span><span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs">{roleLabel(member.role)}</span></div>)}</div></div>
+            <dl className="space-y-3 rounded-xl border bg-card p-5 text-sm"><div className="flex flex-wrap justify-between gap-2"><dt className="text-muted-foreground">{t("pages.services.index.008")}</dt><dd>{new Date(service.created_at).toLocaleString(dateLocale)}</dd></div><div className="flex flex-wrap justify-between gap-2"><dt className="text-muted-foreground">{t("pages.services.index.009")}</dt><dd>{new Date(service.updated_at).toLocaleString(dateLocale)}</dd></div></dl></div>
         </div></div>
 }
 
 export default function ServicesPage() {
+    const { t } = useLocale()
     const { project, services, email, loading, error, reload, indicesLoading, indicesError } = useServices()
-    if (!project) return <p>프로젝트를 선택하세요.</p>
-    if (loading) return <p role="status">서비스 목록을 불러오는 중…</p>
-    if (error) return <div className="space-y-3 p-3"><p role="alert" className="text-destructive">{error}</p><Button variant="outline" onClick={reload}>다시 시도</Button></div>
-    return <section key={project.id} className="space-y-5 p-3"><p className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">서비스를 선택해 인덱스와 사용자를 관리하세요.</p>{indicesLoading && <p role="status" className="text-sm text-muted-foreground">인덱스 목록을 불러오는 중…</p>}{indicesError && <p role="alert" className="text-sm text-destructive">인덱스 목록: {indicesError}</p>}<Routes>
+    if (!project) return <p>{t("pages.services.index.010")}</p>
+    if (loading) return <p role="status">{t("pages.home.dashboard.008")}</p>
+    if (error) return <div className="space-y-3 p-3"><p role="alert" className="text-destructive">{error}</p><Button variant="outline" onClick={reload}>{t("routes.index.001")}</Button></div>
+    return <section key={project.id} className="space-y-5 p-3"><p className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">{t("pages.services.index.011")}</p>{indicesLoading && <p role="status" className="text-sm text-muted-foreground">{t("pages.services.index.012")}</p>}{indicesError && <p role="alert" className="text-sm text-destructive">{t("pages.services.index.013", { v0: indicesError })}</p>}<Routes>
         <Route index element={<ServiceList services={services} email={email} />} />
         <Route path="new" element={<ServiceEditor creating projectId={project.id} email={email} services={services} />} />
         <Route path=":serviceId" element={<ServiceDetail projectId={project.id} email={email} services={services} />} />
