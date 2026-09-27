@@ -1,37 +1,38 @@
-import { t } from '@/i18n'
-export type ServiceRole = 'admin' | 'member'
+import { t } from '@/i18n';
+export type ServiceRole = 'admin' | 'member';
 
 export interface ServiceMember {
-    email: string
-    role: ServiceRole
+    email: string;
+    role: ServiceRole;
 }
 
 export interface ServiceInput {
-    name: string
-    description: string
-    members: ServiceMember[]
-    embedding_model_id?: string | null
-    generation_model_id?: string | null
-    search_top_k?: number
-    system_prompt?: string
-    index_limit?: number
+    name: string;
+    description: string;
+    members: ServiceMember[];
+    embedding_model_id?: string | null;
+    generation_model_id?: string | null;
+    search_top_k?: number;
+    system_prompt?: string;
+    index_limit?: number;
 }
 
 export interface ServiceIndex {
-    id: string
-    name: string
-    description: string
+    id: string;
+    name: string;
+    description: string;
 }
 
 export interface Service extends ServiceInput {
-    id: string
-    project_id: string
-    created_at: string
-    updated_at: string
-    indices: ServiceIndex[]
+    id: string;
+    project_id: string;
+    created_at: string;
+    updated_at: string;
+    indices: ServiceIndex[];
 }
 
-export const roleLabel = (role: ServiceRole) => role === 'admin' ? t("pages.services.types.001") : t("pages.services.types.002")
-export const normalizeEmail = (email: string) => email.trim().toLowerCase()
+export const roleLabel = (role: ServiceRole) =>
+    role === 'admin' ? t('pages.services.types.001') : t('pages.services.types.002');
+export const normalizeEmail = (email: string) => email.trim().toLowerCase();
 export const serviceRole = (service: Service, email: string) =>
-    service.members.find((member) => normalizeEmail(member.email) === normalizeEmail(email))?.role
+    service.members.find((member) => normalizeEmail(member.email) === normalizeEmail(email))?.role;

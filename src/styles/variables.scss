@@ -3,118 +3,118 @@
 
 /* 테마 색상을 따르는 공통 스크롤바 */
 :root {
-  color-scheme: light;
-  --scrollbar-size: 8px;
-  --scrollbar-thumb: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
-  --scrollbar-thumb-hover: color-mix(in srgb, var(--muted-foreground) 65%, transparent);
-  --scrollbar-thumb-active: var(--muted-foreground);
+    color-scheme: light;
+    --scrollbar-size: 8px;
+    --scrollbar-thumb: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
+    --scrollbar-thumb-hover: color-mix(in srgb, var(--muted-foreground) 65%, transparent);
+    --scrollbar-thumb-active: var(--muted-foreground);
 }
 
 :root.dark {
-  color-scheme: dark;
+    color-scheme: dark;
 }
 
 /* Electron / Chromium: 8px 조작 영역 안에 얇고 둥근 손잡이 표시 */
 @supports selector(::-webkit-scrollbar) {
-  *::-webkit-scrollbar {
-    width: var(--scrollbar-size);
-    height: var(--scrollbar-size);
-  }
+    *::-webkit-scrollbar {
+        width: var(--scrollbar-size);
+        height: var(--scrollbar-size);
+    }
 
-  *::-webkit-scrollbar-track,
-  *::-webkit-scrollbar-corner {
-    background: transparent;
-  }
+    *::-webkit-scrollbar-track,
+    *::-webkit-scrollbar-corner {
+        background: transparent;
+    }
 
-  *::-webkit-scrollbar-thumb {
-    min-height: 32px;
-    min-width: 32px;
-    border: 2px solid transparent;
-    border-radius: 999px;
-    background-color: var(--scrollbar-thumb);
-    background-clip: padding-box;
-  }
+    *::-webkit-scrollbar-thumb {
+        min-height: 32px;
+        min-width: 32px;
+        border: 2px solid transparent;
+        border-radius: 999px;
+        background-color: var(--scrollbar-thumb);
+        background-clip: padding-box;
+    }
 
-  *::-webkit-scrollbar-thumb:hover {
-    background-color: var(--scrollbar-thumb-hover);
-  }
+    *::-webkit-scrollbar-thumb:hover {
+        background-color: var(--scrollbar-thumb-hover);
+    }
 
-  *::-webkit-scrollbar-thumb:active {
-    background-color: var(--scrollbar-thumb-active);
-  }
+    *::-webkit-scrollbar-thumb:active {
+        background-color: var(--scrollbar-thumb-active);
+    }
 
-  *::-webkit-scrollbar-button {
-    display: none;
-  }
+    *::-webkit-scrollbar-button {
+        display: none;
+    }
 }
 
 /* 표준 스크롤바 속성을 사용하는 브라우저 */
 @supports not selector(::-webkit-scrollbar) {
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: var(--scrollbar-thumb) transparent;
-  }
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--scrollbar-thumb) transparent;
+    }
 }
 
 @font-face {
-  font-family: 'Material Symbols Outlined';
-  src: url('@/assets/icons/MaterialSymbolsOutlined.ttf') format('truetype');
+    font-family: 'Material Symbols Outlined';
+    src: url('@/assets/icons/MaterialSymbolsOutlined.ttf') format('truetype');
 }
 
 /* Material Symbols 아이콘 클래스 */
 .material-icon {
-  font-family: 'Material Symbols Outlined', serif;
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  display: inline-block;
-  white-space: nowrap;
-  word-wrap: normal;
-  direction: ltr;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    font-family: 'Material Symbols Outlined', serif;
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 /* Material Icon 변형 - 얇고 작은 아이콘 */
 .material-icon-thin {
-  font-family: 'Material Symbols Outlined', serif;
-  font-size: 18px;
-  font-variation-settings: 'wght' 200;
-  line-height: 1;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    font-family: 'Material Symbols Outlined', serif;
+    font-size: 18px;
+    font-variation-settings: 'wght' 200;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 /* 타이틀바 윈도우 컨트롤 버튼 */
 .titlebar-btn {
-  height: calc(100% - 8px);
-  margin: 4px;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-  cursor: pointer;
-  transition: all 150ms;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
+    height: calc(100% - 8px);
+    margin: 4px;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    cursor: pointer;
+    transition: all 150ms;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
 
-  &:hover {
-    background-color: rgba(0, 0, 0, 0.1);
+    &:hover {
+        background-color: rgba(0, 0, 0, 0.1);
 
-    .material-icon-thin {
-      font-variation-settings: 'wght' 400;
+        .material-icon-thin {
+            font-variation-settings: 'wght' 400;
+        }
     }
-  }
 }
 
 .dark .titlebar-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .titlebar-btn-close:hover {
-  background-color: hsl(0 84.2% 60.2%) !important;
-  color: white !important;
+    background-color: hsl(0 84.2% 60.2%) !important;
+    color: white !important;
 }

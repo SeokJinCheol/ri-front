@@ -4,11 +4,17 @@ import Profile from './profile.tsx';
 
 const HomePage = () => {
     return (
-            <Routes>
-                <Route index element={<Dashboard />} />
-                <Route path="profile" element={<Profile />} />
-            </Routes>
-    )
-}
+        <Routes>
+            <Route
+                index
+                element={ <Dashboard /> }
+            />
+            <Route
+                path="profile"
+                element={ <Profile /> }
+            />
+        </Routes>
+    );
+};
 
-export default HomePage
+export default HomePage;

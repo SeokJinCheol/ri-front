@@ -3,7 +3,7 @@ const SelectWorkspaceCard = () => {
         <div>
             aa
         </div>
-    )
-}
+    );
+};
 
-export default SelectWorkspaceCard
+export default SelectWorkspaceCard;

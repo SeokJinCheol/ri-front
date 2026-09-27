@@ -7,39 +7,43 @@ import path from 'path';
 import { translationsPlugin } from './scripts/i18n-workbook.mjs';
 
 export default defineConfig(({ mode }) => {
-  if (mode === 'electron') {
-    const env = loadEnv(mode, process.cwd(), 'VITE_');
-    backendConfig.validateBackendUrl(env.VITE_API_BASE_URL);
-  }
-  return ({
-  base: mode === 'electron' ? './' : '/',
-  plugins: [
-    translationsPlugin(),
-    react(),
-    ...(['nginx', 'local-test'].includes(mode) ? [] : [electron([
-      {
-        entry: 'electron/main.js',
-      },
-      {
-        entry: 'electron/preload.js',
-        onstart(options) {
-          options.reload();
+    if (mode === 'electron') {
+        const env = loadEnv(mode, process.cwd(), 'VITE_');
+        backendConfig.validateBackendUrl(env.VITE_API_BASE_URL);
+    }
+    return {
+        base: mode === 'electron' ? './' : '/',
+        plugins: [
+            translationsPlugin(),
+            react(),
+            ...(['nginx', 'local-test'].includes(mode)
+                ? []
+                : [
+                      electron([
+                          {
+                              entry: 'electron/main.js',
+                          },
+                          {
+                              entry: 'electron/preload.js',
+                              onstart(options) {
+                                  options.reload();
+                              },
+                          },
+                      ]),
+                      renderer(),
+                  ]),
+        ],
+        resolve: {
+            alias: {
+                '@': path.resolve(__dirname, './src'),
+            },
         },
-      },
-    ]),
-    renderer()]),
-  ],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
-  build: {
-    outDir: 'dist',
-  },
-  server: {
-    port: 5174,
-    strictPort: true,
-  },
-});
+        build: {
+            outDir: 'dist',
+        },
+        server: {
+            port: 5174,
+            strictPort: true,
+        },
+    };
 });

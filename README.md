@@ -72,15 +72,15 @@ VITE_API_BASE_URL=https://api.example.com/api/v1
 
 다음 위치에 `backend.json`을 만들고 앱을 완전히 종료한 뒤 다시 실행합니다.
 
-| 운영체제 | 파일 위치 |
-| --- | --- |
-| macOS | `~/Library/Application Support/Real Iron/backend.json` |
-| Windows | `%APPDATA%\Real Iron\backend.json` |
-| Linux | `${XDG_CONFIG_HOME:-~/.config}/Real Iron/backend.json` |
+| 운영체제 | 파일 위치                                              |
+| -------- | ------------------------------------------------------ |
+| macOS    | `~/Library/Application Support/Real Iron/backend.json` |
+| Windows  | `%APPDATA%\Real Iron\backend.json`                     |
+| Linux    | `${XDG_CONFIG_HOME:-~/.config}/Real Iron/backend.json` |
 
 ```json
 {
-  "apiBaseUrl": "http://true-iron.co.kr/ri-rag/api/v1/"
+    "apiBaseUrl": "http://true-iron.co.kr/ri-rag/api/v1/"
 }
 ```
 
@@ -133,3 +133,20 @@ npm run dev:local
 - 닫기: 현재 창 닫기.
 
 헤더는 Electron에서 표시됩니다. 변경된 창 제어 기능은 새 설치 파일에 반영되므로 기존 앱은 업데이트 후 다시 실행하세요.
+
+## 코드 포맷
+
+`.prettierrc.json`과 `scripts/format.mjs`를 기준으로 소스와 설정 파일을 포맷합니다.
+4칸 들여쓰기, 기본 줄 너비 100자, JavaScript/TypeScript 작은따옴표를 사용합니다.
+JSX 전용 플러그인은 중괄호 안쪽 공백, 자식 태그와 동적 표현식의 줄바꿈,
+여러 속성의 줄바꿈을 적용하며 화면 텍스트와 의미 있는 공백을 보존합니다.
+긴 문자열은 의미를 바꾸어 나누지 않습니다.
+
+```sh
+npm run format
+npm run format:check
+npm run test:format
+```
+
+Git에서 관리하거나 아직 추가하지 않은 파일 중 지원하는 텍스트 파일을 처리합니다.
+Git에서 무시하는 의존성·빌드 결과물, 바이너리 파일과 자동 생성 잠금 파일은 제외합니다.

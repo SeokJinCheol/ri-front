@@ -3,34 +3,34 @@ productName: Real Iron
 asar: true
 npmRebuild: false
 directories:
-  output: release
+    output: release
 files:
-  - dist/**/*
-  - dist-electron/**/*
-  - package.json
+    - dist/**/*
+    - dist-electron/**/*
+    - package.json
 artifactName: Real-Iron-${version}-${os}-${arch}.${ext}
 mac:
-  category: public.app-category.productivity
-  target:
-    - dmg
-    - zip
+    category: public.app-category.productivity
+    target:
+        - dmg
+        - zip
 dmg:
-  contents:
-    - x: 130
-      y: 180
-    - x: 410
-      y: 180
-      type: link
-      path: /Applications
+    contents:
+        - x: 130
+          y: 180
+        - x: 410
+          y: 180
+          type: link
+          path: /Applications
 win:
-  target:
-    - nsis
+    target:
+        - nsis
 nsis:
-  oneClick: false
-  perMachine: false
-  allowToChangeInstallationDirectory: true
-  createDesktopShortcut: true
+    oneClick: false
+    perMachine: false
+    allowToChangeInstallationDirectory: true
+    createDesktopShortcut: true
 linux:
-  category: Office
-  target:
-    - AppImage
+    category: Office
+    target:
+        - AppImage

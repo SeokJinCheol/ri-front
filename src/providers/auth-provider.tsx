@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 export interface User {
     id: string;
@@ -17,9 +17,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const TOKEN_KEY = "access_token";
-const TEMPORARY_TOKEN = "real-iron-local-demo";
-const TEMPORARY_USER: User = { id: "demo-user", name: "체험 사용자", email: "demo@realiron.local" };
+const TOKEN_KEY = 'access_token';
+const TEMPORARY_TOKEN = 'real-iron-local-demo';
+const TEMPORARY_USER: User = { id: 'demo-user', name: '체험 사용자', email: 'demo@realiron.local' };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
@@ -36,9 +36,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             try {
                 // 실제 프로젝트 연동 시: const res = await fetchUserInfo(token);
                 // 임시 복원 더미 데이터
-                setUser(token === TEMPORARY_TOKEN ? TEMPORARY_USER : { id: "user-1", name: "관리자", email: "admin@example.com" });
+                setUser(
+                    token === TEMPORARY_TOKEN
+                        ? TEMPORARY_USER
+                        : { id: 'user-1', name: '관리자', email: 'admin@example.com' },
+                );
             } catch (error) {
-                console.error("세션 복구 실패:", error);
+                console.error('세션 복구 실패:', error);
                 localStorage.removeItem(TOKEN_KEY);
                 setUser(null);
             } finally {
@@ -61,16 +65,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return (
         <AuthContext.Provider
-            value={{
-                user,
-                isAuthenticated: !!user,
-                isLoading,
-                login,
-                loginTemporary: () => login(TEMPORARY_TOKEN, TEMPORARY_USER),
-                logout,
-            }}
+            value={
+                {
+                    user,
+                    isAuthenticated: !!user,
+                    isLoading,
+                    login,
+                    loginTemporary: () => login(TEMPORARY_TOKEN, TEMPORARY_USER),
+                    logout,
+                }
+            }
         >
-            {children}
+            {
+                children
+            }
         </AuthContext.Provider>
     );
 }
@@ -78,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) {
-        throw new Error("useAuth must be used within an AuthProvider");
+        throw new Error('useAuth must be used within an AuthProvider');
     }
     return context;
 };
