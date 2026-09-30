@@ -1,4 +1,5 @@
 const fs = require('node:fs');
+const RELEASE_API_BASE_URL = 'http://true-iron.co.kr/ri-rag/api/v1/';
 
 function validateBackendUrl(value) {
     if (typeof value !== 'string' || !value.trim())
@@ -24,4 +25,13 @@ function readBackendOverride(configPath, environment = process.env) {
     return validateBackendUrl(config.apiBaseUrl);
 }
 
-module.exports = { validateBackendUrl, readBackendOverride };
+function resolveBackendUrl(configPath, isPackaged, environment = process.env) {
+    return isPackaged ? RELEASE_API_BASE_URL : readBackendOverride(configPath, environment);
+}
+
+module.exports = {
+    RELEASE_API_BASE_URL,
+    validateBackendUrl,
+    readBackendOverride,
+    resolveBackendUrl,
+};

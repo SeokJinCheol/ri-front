@@ -56,37 +56,32 @@ Electron 전용 빌드는 상대 정적 자산 경로(`./`)와 HashRouter를 사
 
 ## 백엔드 API 주소 설정
 
-기본 API 주소는 `http://true-iron.co.kr/ri-rag/api/v1/`입니다. Electron과 웹 프론트는 이 서버의 Nginx를 통해 백엔드를 호출합니다. `/ri-rag`는 배포 경로이고 `/api/v1`은 백엔드 API 접두사입니다. 로컬 백엔드를 사용하려면 `http://127.0.0.1:8000/api/v1`로 재설정하세요.
+기본 API 주소는 `http://true-iron.co.kr/ri-rag/api/v1/`입니다. Electron과 웹 프론트는 이 서버의 Nginx를 통해 백엔드를 호출합니다. `/ri-rag`는 배포 경로이고 `/api/v1`은 백엔드 API 접두사입니다. 로컬 백엔드 연결은 개발 모드에서만 재설정할 수 있습니다.
 
-### 빌드할 때 지정
+### 배포 빌드 주소 고정
 
-`.env.electron.local` 파일을 만들어 서버 주소를 입력한 뒤 설치 파일을 다시 빌드합니다. 이 파일은 Git에서 제외됩니다.
+`npm run build:electron`과 모든 `electron:build:*`, `electron:pack` 명령은
+`electron/backend-config.cjs`의 `RELEASE_API_BASE_URL`을 사용합니다.
+현재 값은 `http://true-iron.co.kr/ri-rag/api/v1/`입니다.
+배포 앱은 `.env.electron.local`, 셸의 `VITE_API_BASE_URL`, 실행 환경의
+`REAL_IRON_API_BASE_URL`, 기존 `backend.json`에 localhost가 남아 있어도 이 주소로 연결합니다.
+배포 서버를 바꾸려면 `RELEASE_API_BASE_URL`을 수정하고 다시 빌드하세요.
 
-```dotenv
-VITE_API_BASE_URL=https://api.example.com/api/v1
+```bash
+npm run electron:build:mac
+npm run electron:build:win
 ```
 
-`VITE_` 값은 설치 파일에 포함되므로 API 키나 비밀번호를 넣지 마세요. 임베딩·답변 모델 API 키는 기존처럼 백엔드에서 관리합니다.
+결과는 `release/`에 생성됩니다. 설치 파일은 GitHub Releases에 업로드합니다.
+새 버전은 `npm version patch --no-git-tag-version`으로 올린 뒤 빌드합니다.
+macOS Intel용은 `.dmg`, Windows x64용은 `.exe`를 배포합니다.
 
-### 설치 후 지정 (재빌드 불필요)
+### 개발 중 다른 서버 사용
 
-다음 위치에 `backend.json`을 만들고 앱을 완전히 종료한 뒤 다시 실행합니다.
-
-| 운영체제 | 파일 위치                                              |
-| -------- | ------------------------------------------------------ |
-| macOS    | `~/Library/Application Support/Real Iron/backend.json` |
-| Windows  | `%APPDATA%\Real Iron\backend.json`                     |
-| Linux    | `${XDG_CONFIG_HOME:-~/.config}/Real Iron/backend.json` |
-
-```json
-{
-    "apiBaseUrl": "http://true-iron.co.kr/ri-rag/api/v1/"
-}
-```
-
-주소는 `/api/v1`까지 포함하는 절대 HTTP(S) URL이어야 하며, 인증정보·쿼리·해시를 포함할 수 없습니다. 잘못된 설정은 시작 시 오류를 표시합니다.
-
-우선순위: 앱 프로세스의 `REAL_IRON_API_BASE_URL` 환경변수 → `backend.json` → 빌드한 `VITE_API_BASE_URL`. GUI로 실행한 앱은 터미널 환경변수를 상속하지 않을 수 있으므로 설치 후에는 `backend.json` 사용을 권장합니다.
+`npm run electron:dev`에서는 `.env.electron.local`의 `VITE_API_BASE_URL`로 개발 서버를
+설정할 수 있습니다. 개발 앱의 우선순위는 `REAL_IRON_API_BASE_URL` 환경변수 →
+사용자 데이터 폴더의 `backend.json` (`apiBaseUrl`) → `.env.electron` 설정입니다.
+이 재정의는 설치한 배포 앱에는 적용되지 않습니다.
 
 ## 백엔드 연결 확인
 
@@ -122,7 +117,7 @@ npm run test:api-local
 npm run dev:local
 ```
 
-`dev`, `electron:dev`, `dev:local`과 배포 빌드는 모두 기본적으로 `http://true-iron.co.kr/ri-rag/api/v1/`을 사용합니다. 이 PC처럼 hosts에 `127.0.0.1 true-iron.co.kr`을 등록하면 같은 도메인 주소로 로컬 Nginx에 연결됩니다. 설치된 앱에 `backend.json` 설정이 있으면 해당 `apiBaseUrl`도 이 도메인 주소로 맞추고 앱을 다시 실행하세요.
+`dev`, `electron:dev`, `dev:local`과 배포 빌드는 모두 기본적으로 `http://true-iron.co.kr/ri-rag/api/v1/`을 사용합니다. 이 PC처럼 hosts에 `127.0.0.1 true-iron.co.kr`을 등록하면 같은 도메인 주소로 로컬 Nginx에 연결됩니다. 배포 앱은 기존 `backend.json`과 관계없이 지정된 도메인 API를 사용합니다.
 
 ## 앱 헤더
 

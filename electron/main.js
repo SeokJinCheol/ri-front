@@ -2,7 +2,7 @@ const { app, BrowserWindow, ipcMain, Menu, dialog } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const { pathToFileURL } = require('node:url');
-const { readBackendOverride } = require('./backend-config.cjs');
+const { resolveBackendUrl } = require('./backend-config.cjs');
 
 app.setName('Real Iron');
 const userDataPath = path.join(app.getPath('appData'), 'Real Iron');
@@ -81,7 +81,7 @@ function createWindow() {
 app.whenReady().then(() => {
     const configPath = path.join(app.getPath('userData'), 'backend.json');
     try {
-        backendUrl = readBackendOverride(configPath);
+        backendUrl = resolveBackendUrl(configPath, app.isPackaged);
     } catch {
         dialog.showErrorBox(
             '백엔드 설정 오류',

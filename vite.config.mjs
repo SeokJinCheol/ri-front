@@ -6,12 +6,20 @@ import renderer from 'vite-plugin-electron-renderer';
 import path from 'path';
 import { translationsPlugin } from './scripts/i18n-workbook.mjs';
 
-export default defineConfig(({ mode }) => {
-    if (mode === 'electron') {
+export default defineConfig(({ mode, command }) => {
+    const isElectronRelease = mode === 'electron' && command === 'build';
+    if (mode === 'electron' && !isElectronRelease) {
         const env = loadEnv(mode, process.cwd(), 'VITE_');
         backendConfig.validateBackendUrl(env.VITE_API_BASE_URL);
     }
     return {
+        define: isElectronRelease
+            ? {
+                  'import.meta.env.VITE_API_BASE_URL': JSON.stringify(
+                      backendConfig.RELEASE_API_BASE_URL,
+                  ),
+              }
+            : {},
         base: mode === 'electron' ? './' : '/',
         plugins: [
             translationsPlugin(),

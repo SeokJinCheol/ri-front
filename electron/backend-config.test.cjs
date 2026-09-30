@@ -3,7 +3,32 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { validateBackendUrl, readBackendOverride } = require('./backend-config.cjs');
+const {
+    validateBackendUrl,
+    readBackendOverride,
+    resolveBackendUrl,
+} = require('./backend-config.cjs');
+
+test('packaged apps use the release server despite stale localhost overrides', () => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ri-release-config-'));
+    const file = path.join(directory, 'backend.json');
+    try {
+        fs.writeFileSync(file, JSON.stringify({ apiBaseUrl: 'http://localhost:8000/api/v1' }));
+        const environment = { REAL_IRON_API_BASE_URL: 'http://127.0.0.1:8000/api/v1' };
+        assert.equal(
+            resolveBackendUrl(file, true, environment),
+            'http://true-iron.co.kr/ri-rag/api/v1/',
+        );
+        assert.equal(
+            resolveBackendUrl(file, false, environment),
+            environment.REAL_IRON_API_BASE_URL,
+        );
+        fs.writeFileSync(file, '{broken');
+        assert.equal(resolveBackendUrl(file, true, {}), 'http://true-iron.co.kr/ri-rag/api/v1/');
+    } finally {
+        fs.rmSync(directory, { recursive: true, force: true });
+    }
+});
 
 test('only absolute HTTP(S) API URLs without credentials are accepted', () => {
     assert.equal(
