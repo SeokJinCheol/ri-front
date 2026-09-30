@@ -57,6 +57,7 @@ npm run format:check
 npm run test:format
 npm run test:i18n
 npm run test:electron-config
+npm run test:installer
 npm run build
 ```
 
@@ -65,5 +66,6 @@ npm run build
 - 웹 배포 경로를 변경하면 `npm run build:nginx`, Electron 설정을 변경하면 `npm run build:electron`도 확인한다.
 - `npm run test:api-local`은 로컬 Nginx와 백엔드가 필요한 연결 테스트다. 서버가 없어서 실행하지 못하면 그 사실을 결과에 적는다.
 - 빌드 결과는 `dist`, `dist-electron`, 설치 파일은 `release`에 생성된다. 결과물과 `node_modules`, 로컬 환경 파일, Excel 임시 잠금 파일은 커밋하지 않는다.
+- Windows NSIS 빌드는 `beforePack`에서 macOS의 제거 프로그램 추출 체크섬을 보정하고, `artifactBuildCompleted`에서 설치·제거 파일의 CRC를 검사한다. 무결성 검사를 끄지 않는다. 이 훅은 Node.js의 `zlib.crc32`(Node 22.2 이상)가 필요하다.
 - 의존성을 변경하면 `package-lock.json`을 함께 갱신한다. 잠금 파일을 수동 포맷하지 않는다.
 - 커밋 전 `git diff --check`와 변경 범위를 확인하고, 실행한 검증과 남은 제약을 작업 결과에 기록한다.

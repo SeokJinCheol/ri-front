@@ -2,6 +2,8 @@ appId: com.realiron.desktop
 productName: Real Iron
 asar: true
 npmRebuild: false
+beforePack: scripts/nsis-uninstaller.cjs
+artifactBuildCompleted: scripts/verify-nsis.cjs
 directories:
     output: release
 files:
